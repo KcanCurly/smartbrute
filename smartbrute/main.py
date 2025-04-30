@@ -120,6 +120,7 @@ def generate_passwords_from_toml(config_path, user_attributes, min_length):
         for pw in passwords:
             if len(pw) >= min_length:
                 all_passwords.append((importance, pw))
+    return [pw for _, pw in sorted(all_passwords, key=lambda x: -x[0])]
 
 def main():
     parser = argparse.ArgumentParser(description='LDAP Bruteforcer for Active Directory')
