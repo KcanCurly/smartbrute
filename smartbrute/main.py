@@ -15,8 +15,8 @@ def get_lockout_policy(server, base_dn, domain, user, password):
     conn.search(base_dn, '(objectClass=domain)', attributes=['lockoutDuration', 'lockoutObservationWindow', 'minPwdLength'])
     entry = conn.entries[0]
     return {
-        'lockoutDuration': int(entry['lockoutDuration'].value),
-        'lockoutObservationWindow': int(entry['lockoutObservationWindow'].value),
+        'lockoutDuration': entry['lockoutDuration'].value.total_seconds(),
+        'lockoutObservationWindow': entry['lockoutObservationWindow'].value.total_seconds(),
         'minPwdLength': int(entry['minPwdLength'].value)
     }
 
