@@ -43,19 +43,43 @@ importance = 10
 [[pattern]]
 code = """
 passwords += [
-    f"{Bugun{symbol}{year}"
+    f"Bugun{symbol}{year}"
     for symbol in symbols
     for year in years
     for month in months
 ]
 passwords += [
-    f"{Bugun{symbol}{month}{year}"
+    f"Bugun{symbol}{month}{year}"
+    for symbol in symbols
+    for year in years
+    for month in months
+]
+passwords += [
+    f"Dun{symbol}{year}"
+    for symbol in symbols
+    for year in years
+    for month in months
+]
+passwords += [
+    f"Dun{symbol}{month}{year}"
+    for symbol in symbols
+    for year in years
+    for month in months
+]
+passwords += [
+    f"Yarin{symbol}{year}"
+    for symbol in symbols
+    for year in years
+    for month in months
+]
+passwords += [
+    f"Yarin{symbol}{month}{year}"
     for symbol in symbols
     for year in years
     for month in months
 ]
 """
-importance = 10
+importance = 9
 
 [[pattern]]
 importance = 1
