@@ -2,7 +2,7 @@
 template = "{first_name_first_char_capitalized}*{year}"
 code = """
 for year in years:
-    passwords.append(f"{firstname[0].upper()}{firstname[1:]}{year}")
+    passwords.append(f"{first_name[0].upper()}{first_name[1:]}{year}")
 """
 importance = 10
 years = [2024, 2025]
