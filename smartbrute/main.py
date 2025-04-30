@@ -20,8 +20,8 @@ def get_lockout_policy(server, base_dn, domain, user, password):
         'minPwdLength': int(entry['minPwdLength'].value)
     }
 
-def enumerate_user_attributes(server, base_dn, user, password):
-    conn = Connection(server, user=user, password=password, auto_bind=True)
+def enumerate_user_attributes(server, base_dn, domain, user, password):
+    conn = Connection(server, user=f"{domain}\\{user}", password=password, auto_bind=True, authentication='NTLM')
     conn.search(
         search_base=base_dn,
         search_filter='(&(objectCategory=person)(objectClass=user))',
@@ -117,7 +117,7 @@ def main():
     print(f"[*] Minimum Password Length: {policy['minPwdLength']}")
     print("[*] Enumerating users...")
 
-    user_attrs = enumerate_user_attributes(server, base_dn, args.valid_user, args.valid_pass)
+    user_attrs = enumerate_user_attributes(server, base_dn, args.domain, args.valid_user, args.valid_pass)
     print(f"[*] Found {len(user_attrs)} users before filtering")
 
     filtered_users = filter_users(user_attrs, args.exclude_regex)
