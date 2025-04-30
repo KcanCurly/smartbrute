@@ -86,22 +86,13 @@ def generate_passwords_from_toml(config_path, user_attributes, min_length):
         if not first_name:
             continue
 
-        first_char_cap = first_name[0].upper() + first_name[1:] if len(first_name) > 1 else first_name.upper()
-        last_char_cap = last_name[0].upper() + last_name[1:] if len(last_name) > 1 else last_name.upper()
-
         passwords = []
-
-
+        
         if code:
             local_vars = {
                 "username": username,
                 "first_name": first_name,
                 "last_name": last_name,
-                "first_name_first_char_capitalized": first_char_cap,
-                "last_name_first_char_capitalized": last_char_cap,
-                "years": years,
-                "symbol": symbols,
-                "passwords": passwords,
             }
 
             # Inject all other user-defined TOML variables into local_vars
