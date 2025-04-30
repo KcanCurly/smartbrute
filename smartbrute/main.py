@@ -66,13 +66,15 @@ def generate_passwords_from_toml(config_path, user_attributes, min_length):
             raise FileNotFoundError(f"Could not find the TOML configuration file: {config_path}")
 
     all_passwords = []
+    globals_config = config.get("globals", {})
+    patterns = config.get("patterns", [])
 
-    for key, entry in config.items():
+    for entry in patterns:
         importance = entry.get("importance", 0)
-        template = entry.get("template")
         code = entry.get("code")
         years = entry.get("years", [])
         symbols = entry.get("symbols", [""])
+        static = entry.get("static", False)
 
         if not isinstance(years, list):
             years = [str(years)]
@@ -88,6 +90,7 @@ def generate_passwords_from_toml(config_path, user_attributes, min_length):
         last_char_cap = last_name[0].upper() + last_name[1:] if len(last_name) > 1 else last_name.upper()
 
         passwords = []
+
 
         if code:
             local_vars = {
@@ -105,17 +108,11 @@ def generate_passwords_from_toml(config_path, user_attributes, min_length):
             for k, v in entry.items():
                 if k not in ("template", "code", "importance"):
                     local_vars[k] = v
-            exec(code, {}, local_vars)
-        elif template:
-            for year in years:
-                for symbol in symbols:
-                    pw = template
-                    pw = pw.replace("{username}", username)
-                    pw = pw.replace("{first_name_first_char_capitalized}", first_char_cap)
-                    pw = pw.replace("{last_name_first_char_capitalized}", last_char_cap)
-                    pw = pw.replace("{year}", str(year))
-                    pw = pw.replace("{symbol}", symbol)
-                    passwords.append(pw)
+
+            combined_vars = globals_config.copy()
+            combined_vars.update(local_vars)
+            exec(code, {}, combined_vars)
+
 
         for pw in passwords:
             if len(pw) >= min_length:
