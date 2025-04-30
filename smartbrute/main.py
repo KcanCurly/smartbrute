@@ -7,12 +7,11 @@ from typing import List, Dict
 import os
 
 def get_default_naming_context(server, domain, user, password):
-    conn = Connection(server, user=f"{domain}\\{user}", password=password, auto_bind=True, authentication='NTLM')
-    conn.search('', '(objectClass=*)', search_scope='BASE', attributes=['defaultNamingContext'])
-    return conn.entries[0]['defaultNamingContext'].value
+    conn = Connection(server, user=f"{domain}\\{user}", password=password, auto_bind=True, authentication='SIMPLE')
+    return server.info.other['defaultNamingContext'][0]
 
 def get_lockout_policy(server, base_dn, domain, user, password):
-    conn = Connection(server, user=f"{domain}\\{user}", password=password, auto_bind=True, authentication='NTLM')
+    conn = Connection(server, user=f"{domain}\\{user}", password=password, auto_bind=True, authentication='SIMPLE')
     conn.search(base_dn, '(objectClass=domain)', attributes=['lockoutDuration', 'lockoutObservationWindow', 'minPwdLength'])
     entry = conn.entries[0]
     return {
