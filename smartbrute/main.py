@@ -87,12 +87,13 @@ def generate_passwords_from_toml(config_path, user_attributes, min_length):
             continue
 
         passwords = []
-        
+
         if code:
             local_vars = {
                 "username": username,
                 "first_name": first_name,
                 "last_name": last_name,
+                "passwords": passwords,
             }
 
             # Inject all other user-defined TOML variables into local_vars
