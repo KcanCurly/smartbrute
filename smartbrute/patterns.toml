@@ -1,0 +1,9 @@
+[pattern1]
+template = "{first_name_first_char_capitalized}*{year}"
+importance = 10
+year = 2024
+
+[pattern2]
+template = "{first_name_first_char_capitalized}{year}"
+importance = 9
+year = 2024
