@@ -4,6 +4,7 @@ import toml
 from ldap3 import Server, Connection, ALL
 from ldap3.core.exceptions import LDAPBindError
 from typing import List, Dict
+import os
 
 def get_default_naming_context(server, user, password):
     conn = Connection(server, user=user, password=password, auto_bind=True)
@@ -54,7 +55,16 @@ def try_bind(server, domain, username, password):
         return False
 
 def generate_passwords_from_toml(config_path, user_attributes, min_length):
-    config = toml.load(config_path)
+    if os.path.isfile(config_path):
+        config = toml.load(config_path)
+    else:
+        # Try script directory
+        script_dir = os.path.dirname(os.path.realpath(__file__))
+        alt_path = os.path.join(script_dir, config_path)
+        if os.path.isfile(alt_path):
+            config = toml.load(alt_path)
+        else:
+            raise FileNotFoundError(f"Could not find the TOML configuration file: {config_path}")
     passwords = []
 
     for key, entry in config.items():
