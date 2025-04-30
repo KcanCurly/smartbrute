@@ -43,7 +43,6 @@ def filter_users(user_attrs: List[Dict], exclude_regexes: List[str]) -> List[Dic
         name = user['sAMAccountName']
         if any(p.search(name) for p in patterns):
             print(f"Found for: {name}")
-            print(p)
             continue
         filtered.append(user)
     return filtered
@@ -106,7 +105,7 @@ def main():
     parser.add_argument('--domain', required=True, help='AD domain name (e.g., CONTOSO)')
     parser.add_argument('--valid-user', required=True, help='A known valid domain user (for querying policies)')
     parser.add_argument('--valid-pass', required=True, help='Password of the valid domain user')
-    parser.add_argument('--exclude-regex', nargs='*', default=["\\$$","MSOL.*", "service.*", "svc.*", "HealthBox.*", "Guest"], help='Regex patterns to exclude usernames')
+    parser.add_argument('--exclude-regex', nargs='*', default=["krbtgt", "\\$$","MSOL.*", "service.*", "svc.*", "HealthBox.*", "Guest"], help='Regex patterns to exclude usernames')
     parser.add_argument('--patterns', default='patterns.toml', help='TOML file containing password generation patterns')
     parser.add_argument('--only-show-generated-passwords', action='store_true', help='Only print generated passwords without attempting login')
     args = parser.parse_args()
