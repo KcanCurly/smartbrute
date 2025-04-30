@@ -1,0 +1,1 @@
+Small script to bruteforce AD ldap without locking accounts.
