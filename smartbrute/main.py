@@ -67,7 +67,7 @@ def generate_passwords_from_toml(config_path, user_attributes, min_length):
 
     all_passwords = []
     globals_config = config.get("globals", {})
-    patterns = config.get("patterns", [])
+    patterns = config.get("pattern", [])
 
     for entry in patterns:
         importance = entry.get("importance", 0)
