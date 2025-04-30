@@ -1,13 +1,12 @@
 [pattern1]
 template = "{first_name_first_char_capitalized}*{year}"
 code = """
-for year in years:
-    passwords.append(f"{first_name[0].upper()}{first_name[1:]}{year}")
+passwords += [
+    f"{first_name[0].upper()}{symbol}{first_name[1:]}{year}"
+    for year in years
+    for symbol in symbols
+]
 """
 importance = 10
 years = [2024, 2025]
-
-[pattern2]
-template = "{first_name_first_char_capitalized}{year}"
-importance = 9
-years = 2024
+symbols = ["", "*"]
