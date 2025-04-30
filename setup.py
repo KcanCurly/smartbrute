@@ -1,13 +1,13 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="SSHWhirl",
+    name="smartbrute",
     version="1.0.0",
     author="KcanCurly",
     description="A script to brute ldap without blocking account.",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
-    url="https://github.com/KcanCurly/ssh-whirl",
+    url="https://github.com/KcanCurly/smartbrute",
     packages=find_packages(),
     install_requires=[
         "ldap3",

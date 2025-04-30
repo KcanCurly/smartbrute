@@ -6,13 +6,13 @@ from ldap3.core.exceptions import LDAPBindError
 from typing import List, Dict
 import os
 
-def get_default_naming_context(server, user, password):
-    conn = Connection(server, user=user, password=password, auto_bind=True)
+def get_default_naming_context(server, domain, user, password):
+    conn = Connection(server, user=f"{domain}\\{user}", password=password, auto_bind=True)
     conn.search('', '(objectClass=*)', search_scope='BASE', attributes=['defaultNamingContext'])
     return conn.entries[0]['defaultNamingContext'].value
 
-def get_lockout_policy(server, base_dn, user, password):
-    conn = Connection(server, user=user, password=password, auto_bind=True)
+def get_lockout_policy(server, base_dn, domain, user, password):
+    conn = Connection(server, user=f"{domain}\\{user}", password=password, auto_bind=True)
     conn.search(base_dn, '(objectClass=domain)', attributes=['lockoutDuration', 'lockoutObservationWindow', 'minPwdLength'])
     entry = conn.entries[0]
     return {
@@ -111,8 +111,8 @@ def main():
     args = parser.parse_args()
 
     server = Server(args.host, get_info=ALL)
-    base_dn = get_default_naming_context(server, args.valid_user, args.valid_pass)
-    policy = get_lockout_policy(server, base_dn, args.valid_user, args.valid_pass)
+    base_dn = get_default_naming_context(server, args.domain, args.valid_user, args.valid_pass)
+    policy = get_lockout_policy(server, base_dn, args.domain, args.valid_user, args.valid_pass)
 
     print(f"[*] Lockout Duration: {policy['lockoutDuration']}")
     print(f"[*] Minimum Password Length: {policy['minPwdLength']}")
