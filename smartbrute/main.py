@@ -145,7 +145,7 @@ def main():
     if args.verbose:
         print("[*] Enumerating users...")
 
-    user_attrs = enumerate_user_attributes(server, base_dn, args.valid_user, args.valid_pass)
+    user_attrs = enumerate_user_attributes(server, base_dn, args.domain, args.valid_user, args.valid_pass)
     if args.verbose:
         print(f"[*] Found {len(user_attrs)} users before filtering")
 
