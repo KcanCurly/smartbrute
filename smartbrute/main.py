@@ -59,7 +59,8 @@ def calculate_total_duration(max_passwords, tries_per_wait, dynamic_delay, time_
     hours = int(delta // 3600)
     minutes = int((delta % 3600) // 60)
     seconds = int(delta % 60)
-    days = int(delta // 24)
+    days = int(hours // 24)
+    hours = hours // 24 
 
     return days, hours, minutes, seconds, current_time.strftime("%Y-%m-%d %H:%M:%S")
 
