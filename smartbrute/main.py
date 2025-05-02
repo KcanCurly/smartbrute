@@ -43,31 +43,23 @@ def calculate_total_duration(max_passwords, tries_per_wait, dynamic_delay, time_
     current_time = start_time
 
     total_tries = max_passwords
-    total_time_seconds = 0
 
     while total_tries > 0:
         tries_per_round = get_tries_for_time(time_based_tries, current_time, tries_per_wait)
-        rounds = (total_tries + tries_per_round - 1) // tries_per_round  # Round up
-
-        # Calculate the time for this round
-        round_time_seconds = rounds * (dynamic_delay + tries_per_round)
-        total_time_seconds += round_time_seconds
-
-        # Deduct the number of attempts processed in this window
-        total_tries -= rounds * tries_per_round
+        total_tries -= tries_per_round
 
         # Move to the next time window
-        current_time = (datetime.combine(datetime.today(), current_time) + timedelta(seconds=round_time_seconds)).time()
+        current_time = (datetime.combine(current_time, timedelta(seconds=dynamic_delay))).time()
 
-    end_time = (datetime.combine(datetime.today(), start_time) + timedelta(seconds=total_time_seconds))
+    delta = current_time - start_time
 
     # Convert total time to hours, minutes, and seconds
-    hours = int(total_time_seconds // 3600)
-    minutes = int((total_time_seconds % 3600) // 60)
-    seconds = int(total_time_seconds % 60)
-    days = int(hours // 24)
+    hours = int(delta // 3600)
+    minutes = int((delta % 3600) // 60)
+    seconds = int(delta % 60)
+    days = int(delta // 24)
 
-    return days, hours, minutes, seconds, end_time.strftime("%Y-%m-%d %H:%M:%S")
+    return days, hours, minutes, seconds, current_time.strftime("%Y-%m-%d %H:%M:%S")
 
 
 def parse_time_based_tries(tries_str):
