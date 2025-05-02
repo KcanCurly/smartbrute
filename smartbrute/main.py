@@ -48,8 +48,6 @@ def calculate_total_duration(max_passwords, tries_per_wait, dynamic_delay, time_
         tries_per_round = get_tries_for_time(time_based_tries, current_time, tries_per_wait)
         total_tries -= tries_per_round
 
-
-
         # Move to the next time window
         current_time += timedelta(seconds=dynamic_delay)
 
@@ -88,6 +86,12 @@ def get_tries_for_time(time_based_tries, current_time, default):
     for tries, start_time, end_time in time_based_tries:
         start = parse_time_window(start_time)
         end = parse_time_window(end_time)
+
+        print("-----------")
+        print(start)
+        print(end)
+        print(current_time.time())
+        print("-----------")
         
         # Check if current time is within the window
         if start <= current_time.time() <= end:
