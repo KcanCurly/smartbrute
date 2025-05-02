@@ -96,7 +96,7 @@ def get_tries_for_time(time_based_tries, current_time, default):
         print("-----------")
         
         # Check if current time is within the window
-        if start <= current_time.time() <= end:
+        if end <= current_time.time() <= start:
             print("yes")
             return tries
     return default  # Default tries per window if no match is found
