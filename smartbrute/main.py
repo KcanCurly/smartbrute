@@ -78,8 +78,7 @@ def parse_time_based_tries(tries_str):
     time_based_tries = []
     
     for rule in tries_str:
-        tries = rule.split(":")[0]
-        time_range = rule.split(":")[1:2]
+        tries, time_range = rule.split(":", 1)
         start_time, end_time = time_range.split("-")
         
         # Convert start_time and end_time to datetime objects
