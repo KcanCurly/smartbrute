@@ -26,7 +26,7 @@ def parse_time_window(time_str):
 
 def get_current_time():
     """Return the current UTC time"""
-    return datetime.utcnow().time()
+    return datetime.utcnow()
 
 
 def calculate_total_duration(max_passwords, tries_per_wait, dynamic_delay, time_based_tries, start_time):
@@ -51,7 +51,7 @@ def calculate_total_duration(max_passwords, tries_per_wait, dynamic_delay, time_
 
 
         # Move to the next time window
-        current_time = datetime.combine(current_time, timedelta(seconds=dynamic_delay))
+        current_time += dynamic_delay
 
     delta = (current_time - start_time).total_seconds()
 
@@ -91,7 +91,7 @@ def get_tries_for_time(time_based_tries, current_time, default):
         end = parse_time_window(end_time)
         
         # Check if current time is within the window
-        if start <= current_time <= end:
+        if start <= current_time.time() <= end:
             return tries
     return default  # Default tries per window if no match is found
 
