@@ -12,12 +12,14 @@ import pytz
 from datetime import datetime, timedelta, timezone
 
 LEET_MAP = {
-    'a': '4',
-    'e': '3',
-    'i': '1',
     'o': '0',
+    'i': '1',
+    'z': '2',
+    'e': '3',
+    'a': '4',
     's': '5',
-    't': '7'
+    't': '7',
+    'b': '8',
 }
 
 def parse_time_window(time_str):
