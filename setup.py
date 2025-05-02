@@ -13,6 +13,7 @@ setup(
     install_requires=[
         "ldap3",
         "toml",
+        "pytz",
     ],
     classifiers=[
         "Programming Language :: Python :: 3",

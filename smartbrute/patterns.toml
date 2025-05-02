@@ -16,23 +16,92 @@ importance = 10
 [[pattern]]
 code = """
 passwords += [
-    f"{first_name[0].upper()}{last_name[0]}{symbol}{year}"
+    f"{first_name[0].upper()}{last_name[0].lower()}{symbol}{year}"
     for symbol in symbols
     for year in years
 ]
 passwords += [
-    f"{first_name[0].upper()}{last_name[0]}{symbol}{month}{year}"
+    f"{first_name[0].upper()}{last_name[0].lower()}{symbol}{month}{year}"
     for symbol in symbols
     for year in years
     for month in months
 ]
 passwords += [
-    f"{first_name[0]}{last_name[0].upper()}{symbol}{year}"
+    f"{first_name[0].lower()}{last_name[0].upper()}{symbol}{year}"
     for symbol in symbols
     for year in years
 ]
 passwords += [
-    f"{first_name[0]}{last_name[0].upper()}{symbol}{month}{year}"
+    f"{first_name[0].lower()}{last_name[0].upper()}{symbol}{month}{year}"
+    for symbol in symbols
+    for year in years
+    for month in months
+]
+
+passwords += [
+    f"{last_name[0].lower()}{first_name[0].upper()}{symbol}{year}"
+    for symbol in symbols
+    for year in years
+]
+passwords += [
+    f"{last_name[0].lower()}{first_name[0].upper()}{symbol}{month}{year}"
+    for symbol in symbols
+    for year in years
+    for month in months
+]
+passwords += [
+    f"{last_name[0].upper()}{first_name[0].lower()}{symbol}{year}"
+    for symbol in symbols
+    for year in years
+]
+passwords += [
+    f"{last_name[0].upper()}{first_name[0].lower()}{symbol}{month}{year}"
+    for symbol in symbols
+    for year in years
+    for month in months
+]
+
+passwords += [
+    f"{first_name[0].upper()}{last_name[0].lower()}{symbol}{year[2:]}"
+    for symbol in symbols
+    for year in years
+]
+passwords += [
+    f"{first_name[0].upper()}{last_name[0].lower()}{symbol}{month}{year[2:]}"
+    for symbol in symbols
+    for year in years
+    for month in months
+]
+passwords += [
+    f"{first_name[0].lower()}{last_name[0].upper()}{symbol}{year[2:]}"
+    for symbol in symbols
+    for year in years
+]
+passwords += [
+    f"{first_name[0].lower()}{last_name[0].upper()}{symbol}{month}{year[2:]}"
+    for symbol in symbols
+    for year in years
+    for month in months
+]
+
+passwords += [
+    f"{last_name[0].lower()}{first_name[0].upper()}{symbol}{year[2:]}"
+    for symbol in symbols
+    for year in years
+]
+passwords += [
+    f"{last_name[0].lower()}{first_name[0].upper()}{symbol}{month}{year[2:]}"
+    for symbol in symbols
+    for year in years
+    for month in months
+]
+passwords += [
+    f"{last_name[0].upper()}{first_name[0].lower()}{symbol}{year[2:]}"
+    for symbol in symbols
+    for year in years
+]
+passwords += [
+    f"{last_name[0].upper()}{first_name[0].lower()}{symbol}{month}{year[2:]}"
     for symbol in symbols
     for year in years
     for month in months
@@ -84,7 +153,5 @@ importance = 9
 [[pattern]]
 importance = 1
 code = """
-passwords.append("Spring2024!")
-passwords.append("Welcome123")
-passwords.append("Qwerty!2023")
+passwords.append("Aa12456")
 """
