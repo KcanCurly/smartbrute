@@ -87,20 +87,10 @@ def get_tries_for_time(time_based_tries, current_time, default):
         start = parse_time_window(start_time)
         end = parse_time_window(end_time)
 
-
-
-        print("-----------")
-        print(start)
-        print(end)
-        print(current_time.time())
-        print("-----------")
         if start <= end and start <= current_time.time() <= end:
-            print("Yes")
             return tries
-        else:
-            if current_time.time() >= start or current_time.time() <= end:
-                print("Yes")
-                return tries
+        if current_time.time() >= start or current_time.time() <= end:
+            return tries
         
     return default  # Default tries per window if no match is found
 
@@ -140,9 +130,12 @@ def get_default_naming_context(server, domain, user, password):
 
 def get_lockout_policy(server, base_dn, domain, user, password):
     conn = Connection(server, user=f"{domain}\\{user}", password=password, auto_bind=True, authentication='NTLM')
-    conn.search(base_dn, '(objectClass=domain)', attributes=['lockoutThreshold', 'lockoutDuration', 'lockoutObservationWindow', 'minPwdLength'])
+    conn.search(base_dn, '(objectClass=domain)', attributes=['lockoutThreshold', 'lockoutDuration', 'lockoutObservationWindow', 'minPwdLength', 'pwdProperties'])
     entry = conn.entries[0]
+    DOMAIN_PASSWORD_COMPLEX = 1
+    pwd_properties  = int(entry['pwdProperties'].value)
     return {
+        'pwdProperties' : bool(pwd_properties & DOMAIN_PASSWORD_COMPLEX),
         'lockoutThreshold': int(entry['lockoutThreshold'].value),
         'lockoutDuration': entry['lockoutDuration'].value.total_seconds(),
         'lockoutObservationWindow': entry['lockoutObservationWindow'].value.total_seconds(),
@@ -265,6 +258,7 @@ def main():
     print(f"[*] Lockout Threshold: {policy['lockoutThreshold']} attempts")
     print(f"[*] Lockout Observation Window: {policy['lockoutObservationWindow']} seconds")
     print(f"[*] Lockout Duration: {policy['lockoutDuration']} seconds")
+    print(f"[*] Password Complexity: {policy['pwdProperties']}")
     print(f"[*] Minimum Password Length: {policy['minPwdLength']}")
     if args.verbose:
         print("[*] Enumerating users...")
