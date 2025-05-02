@@ -48,10 +48,12 @@ def calculate_total_duration(max_passwords, tries_per_wait, dynamic_delay, time_
         tries_per_round = get_tries_for_time(time_based_tries, current_time, tries_per_wait)
         total_tries -= tries_per_round
 
-        # Move to the next time window
-        current_time = (datetime.combine(current_time, timedelta(seconds=dynamic_delay))).time()
 
-    delta = current_time - start_time
+
+        # Move to the next time window
+        current_time = datetime.combine(current_time, timedelta(seconds=dynamic_delay))
+
+    delta = (current_time - start_time).total_seconds()
 
     # Convert total time to hours, minutes, and seconds
     hours = int(delta // 3600)
