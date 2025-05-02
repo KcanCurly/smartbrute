@@ -51,7 +51,7 @@ def calculate_total_duration(max_passwords, tries_per_wait, dynamic_delay, time_
 
 
         # Move to the next time window
-        current_time += dynamic_delay
+        current_time += timedelta(seconds=dynamic_delay)
 
     delta = (current_time - start_time).total_seconds()
 
