@@ -285,7 +285,7 @@ def main():
     max_passwords = 0
 
     for user in filtered_users:
-        passwords = generate_passwords_from_toml(args.patterns, user, policy['minPwdLength'])
+        passwords = generate_passwords_from_toml(args.patterns, user, policy['minPwdLength'], {"complex_password" : policy['pwdProperties']})
         user_passwords_map[user['sAMAccountName']] = passwords
         max_passwords = max(max_passwords, len(passwords))
 

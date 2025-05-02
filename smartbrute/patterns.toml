@@ -5,6 +5,8 @@ months = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"
 
 [[pattern]]
 code = """
+if complex_password:
+    return
 passwords += [
     f"{first_name[0].upper()}{first_name[1:]}{symbol}{year}"
     for year in years
