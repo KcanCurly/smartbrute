@@ -175,7 +175,7 @@ def try_bind(server, domain, username, password):
     except LDAPBindError:
         return False
 
-def generate_passwords_from_toml(config_path, user_attributes, min_length):
+def generate_passwords_from_toml(config_path, user_attributes, min_length, custom_vars = {}):
     if os.path.isfile(config_path):
         config = toml.load(config_path)
     else:
@@ -223,6 +223,7 @@ def generate_passwords_from_toml(config_path, user_attributes, min_length):
                     local_vars[k] = v
 
             combined_vars = globals_config.copy()
+            combined_vars.update(custom_vars)
             combined_vars.update(local_vars)
             exec(code, {}, combined_vars)
 
