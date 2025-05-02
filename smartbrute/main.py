@@ -87,14 +87,16 @@ def get_tries_for_time(time_based_tries, current_time, default):
         start = parse_time_window(start_time)
         end = parse_time_window(end_time)
 
+
+
         print("-----------")
         print(start)
         print(end)
-        print(current_time.time())
+        print(parse_time_window(current_time))
         print("-----------")
         
         # Check if current time is within the window
-        if start <= current_time.time() <= end:
+        if start <= parse_time_window(current_time) <= end:
             return tries
     return default  # Default tries per window if no match is found
 
