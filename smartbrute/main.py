@@ -62,10 +62,10 @@ def calculate_total_duration(max_passwords, tries_per_wait, dynamic_delay, time_
     end_time = (datetime.combine(datetime.today(), start_time) + timedelta(seconds=total_time_seconds))
 
     # Convert total time to hours, minutes, and seconds
-    hours = total_time_seconds // 3600
-    minutes = (total_time_seconds % 3600) // 60
-    seconds = total_time_seconds % 60
-    days = hours / 24
+    hours = int(total_time_seconds // 3600)
+    minutes = int((total_time_seconds % 3600) // 60)
+    seconds = int(total_time_seconds % 60)
+    days = int(hours // 24)
 
     return days, hours, minutes, seconds, end_time.strftime("%Y-%m-%d %H:%M:%S")
 
@@ -78,7 +78,8 @@ def parse_time_based_tries(tries_str):
     time_based_tries = []
     
     for rule in tries_str:
-        tries, time_range = rule.split(":")
+        tries = rule.split(":")[0]
+        time_range = rule.split(":")[1:2]
         start_time, end_time = time_range.split("-")
         
         # Convert start_time and end_time to datetime objects
@@ -276,8 +277,6 @@ def main():
 
     if args.check == 1:
         return
-
-        
 
     if policy['lockoutThreshold'] == 1:
         print("[!] Lockout threshold is 1. Bruteforce is too risky and will not be performed.")
