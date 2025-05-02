@@ -62,46 +62,46 @@ passwords += [
 ]
 
 passwords += [
-    f"{first_name[0].upper()}{last_name[0].lower()}{symbol}{year[2:]}"
+    f"{first_name[0].upper()}{last_name[0].lower()}{symbol}{str(year)[2:]}"
     for symbol in symbols
     for year in years
 ]
 passwords += [
-    f"{first_name[0].upper()}{last_name[0].lower()}{symbol}{month}{year[2:]}"
+    f"{first_name[0].upper()}{last_name[0].lower()}{symbol}{month}{str(year)[2:]}"
     for symbol in symbols
     for year in years
     for month in months
 ]
 passwords += [
-    f"{first_name[0].lower()}{last_name[0].upper()}{symbol}{year[2:]}"
+    f"{first_name[0].lower()}{last_name[0].upper()}{symbol}{str(year)[2:]}"
     for symbol in symbols
     for year in years
 ]
 passwords += [
-    f"{first_name[0].lower()}{last_name[0].upper()}{symbol}{month}{year[2:]}"
+    f"{first_name[0].lower()}{last_name[0].upper()}{symbol}{month}{str(year)[2:]}"
     for symbol in symbols
     for year in years
     for month in months
 ]
 
 passwords += [
-    f"{last_name[0].lower()}{first_name[0].upper()}{symbol}{year[2:]}"
+    f"{last_name[0].lower()}{first_name[0].upper()}{symbol}{str(year)[2:]}"
     for symbol in symbols
     for year in years
 ]
 passwords += [
-    f"{last_name[0].lower()}{first_name[0].upper()}{symbol}{month}{year[2:]}"
+    f"{last_name[0].lower()}{first_name[0].upper()}{symbol}{month}{str(year)[2:]}"
     for symbol in symbols
     for year in years
     for month in months
 ]
 passwords += [
-    f"{last_name[0].upper()}{first_name[0].lower()}{symbol}{year[2:]}"
+    f"{last_name[0].upper()}{first_name[0].lower()}{symbol}{str(year)[2:]}"
     for symbol in symbols
     for year in years
 ]
 passwords += [
-    f"{last_name[0].upper()}{first_name[0].lower()}{symbol}{month}{year[2:]}"
+    f"{last_name[0].upper()}{first_name[0].lower()}{symbol}{month}{str(year)[2:]}"
     for symbol in symbols
     for year in years
     for month in months
