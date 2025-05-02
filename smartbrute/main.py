@@ -94,11 +94,13 @@ def get_tries_for_time(time_based_tries, current_time, default):
         print(end)
         print(current_time.time())
         print("-----------")
-        
-        # Check if current time is within the window
-        if start <= current_time.time() <= end:
+        if start <= end:
             print("Yes")
-            return tries
+            return start <= current_time.time() <= end
+        else:
+            print("Yes")
+            return current_time.time() >= start or current_time.time() <= end
+        
     return default  # Default tries per window if no match is found
 
 def leetify(word: str, mode: int):
