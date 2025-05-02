@@ -82,8 +82,8 @@ def parse_time_based_tries(tries_str):
         start_time, end_time = time_range.split("-")
         
         # Convert start_time and end_time to datetime objects
-        start_time = datetime.strptime(start_time, "%H:%M")
-        end_time = datetime.strptime(end_time, "%H:%M")
+        # start_time = datetime.strptime(start_time, "%H:%M")
+        # end_time = datetime.strptime(end_time, "%H:%M")
         
         # Store as a tuple
         time_based_tries.append((int(tries), start_time, end_time))
