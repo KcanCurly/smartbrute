@@ -317,7 +317,7 @@ def main():
         tries_per_wait = get_tries_for_time(time_based_tries, get_current_time(), args.tries_per_wait)
         while tries_per_wait > 0:
             tries_per_wait -= 1
-            print(f"[*] Trying password round {i+1}")
+            print(f"[*] Trying password round {i+1}/{len(max_passwords)}")
             for user in filtered_users:
                 username = user['sAMAccountName']
                 if username in found_for_user:
