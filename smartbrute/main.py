@@ -92,7 +92,7 @@ def get_tries_for_time(time_based_tries, current_time, default):
         print("-----------")
         print(start)
         print(end)
-        print(parse_time_window(current_time))
+        print(current_time.time())
         print("-----------")
         
         # Check if current time is within the window
