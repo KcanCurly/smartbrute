@@ -137,7 +137,7 @@ def get_default_naming_context(server, domain, user, password):
 
 def get_lockout_policy(server, base_dn, domain, user, password):
     conn = Connection(server, user=f"{domain}\\{user}", password=password, auto_bind=True, authentication='NTLM')
-    conn.search(base_dn, '(objectClass=domain)', attributes=['lockoutDuration', 'lockoutObservationWindow', 'minPwdLength'])
+    conn.search(base_dn, '(objectClass=domain)', attributes=['lockoutThreshold', 'lockoutDuration', 'lockoutObservationWindow', 'minPwdLength'])
     entry = conn.entries[0]
     return {
         'lockoutDuration': entry['lockoutDuration'].value.total_seconds(),
