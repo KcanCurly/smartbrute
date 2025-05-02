@@ -26,7 +26,7 @@ def parse_time_window(time_str):
 
 def get_current_time():
     """Return the current UTC time"""
-    return datetime.utcnow()
+    return datetime.now(timezone.utc)
 
 
 def calculate_total_duration(max_passwords, tries_per_wait, dynamic_delay, time_based_tries, start_time):
@@ -56,11 +56,9 @@ def calculate_total_duration(max_passwords, tries_per_wait, dynamic_delay, time_
     delta = (current_time - start_time).total_seconds()
 
     # Convert total time to hours, minutes, and seconds
-    hours = int(delta // 3600)
-    minutes = int((delta % 3600) // 60)
-    seconds = int(delta % 60)
-    days = int(hours // 24)
-    hours = hours // 24 
+    days = delta.days
+    hours, remainder = divmod(delta.seconds, 3600)  # Get hours from remaining seconds
+    minutes, seconds = divmod(remainder, 60)  # Get minutes and seconds from remainder
 
     return days, hours, minutes, seconds, current_time.strftime("%Y-%m-%d %H:%M:%S")
 
@@ -292,20 +290,18 @@ def main():
                 print(f"{username}:{pw}")
         return
     
-    if args.check == 2:
-        print(f"[*] Maximum passwords to try per user:")
-        for username, passwords in user_passwords_map.items():
-            print(f"{username}:{len(passwords)}")
+    print(f"[*] Maximum passwords to try per user:")
+    for username, passwords in user_passwords_map.items():
+        print(f"{username}:{len(passwords)}")
 
-        days, hours, minutes, seconds, end_time = calculate_total_duration(max_passwords, args.tries_per_wait, dynamic_delay, time_based_tries, get_current_time())
-        print(f"[*] Estimated total bruteforce duration: {days} days, {hours} hours, {minutes} minutes, {seconds} seconds")
-        print(f"[*] Estimated finish time (UTC): {end_time}")
+    days, hours, minutes, seconds, end_time = calculate_total_duration(max_passwords, args.tries_per_wait, dynamic_delay, time_based_tries, get_current_time())
+    print(f"[*] Estimated total bruteforce duration: {days} days, {hours} hours, {minutes} minutes, {seconds} seconds")
+    print(f"[*] Estimated finish time (UTC): {end_time}")
+
+    if args.check == 2:
         return
 
-    hours, minutes, seconds = calculate_total_duration(max_passwords, args.tries_per_wait, dynamic_delay, time_based_tries, get_current_time())
-    print(f"Estimated total duration: {hours} hours {minutes} minutes {seconds} seconds")
     found_for_user = []
-
 
     for i in range(max_passwords):
         tries_per_wait = get_tries_for_time(time_based_tries, get_current_time(), args.tries_per_wait)
