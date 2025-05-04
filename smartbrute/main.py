@@ -9,6 +9,8 @@ import os
 from itertools import combinations
 from datetime import datetime
 from datetime import datetime, timedelta, timezone
+import socket
+import threading
 
 class UserPasswordContainer:
     def __init__(self, domain, username, passwords):
@@ -52,6 +54,26 @@ LEET_MAP = {
     't': '7',
     'b': '8',
 }
+
+pause_flag = threading.Event()
+
+def control_listener(port, verbose):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(('0.0.0.0', port))
+        s.listen(1)
+        if verbose:
+            print(f"[Control] Listening on port {port}")
+        while True:
+            conn, addr = s.accept()
+            with conn:
+                data = conn.recv(1024).decode().strip()
+                print(f"[Control] Received from {addr}: {data}")
+                if data.lower() == "yes":
+                    print("[Control] Pausing main loop...")
+                    pause_flag.set()
+                elif data.lower() == "resume":
+                    print("[Control] Resuming main loop...")
+                    pause_flag.clear()
 
 def parse_time_window(time_str):
     """Parse time in HH:MM format"""
@@ -266,7 +288,7 @@ def generate_passwords_from_toml(config_path, user_attributes, min_length, custo
         for pw in passwords:
             if len(pw) >= min_length:
                 all_passwords.append((importance, pw))
-    return [pw for _, pw in sorted(all_passwords, key=lambda x: -x[0])]
+    return all_passwords
 
 def main():
     parser = argparse.ArgumentParser(description='LDAP Bruteforcer for Active Directory')
@@ -278,11 +300,13 @@ def main():
     parser.add_argument('--exclude-regex', nargs='*', default=["Administrator", "krbtgt", "\\$$","MSOL.*", "service.*", "svc.*", "HealthBox.*", "Guest"], help='Regex patterns to exclude usernames')
     parser.add_argument('--patterns', default='patterns.toml', help='TOML file containing password generation patterns')
     parser.add_argument('--only-show-generated-passwords', action='store_true', help='Only print generated passwords without attempting login')
-    parser.add_argument('--verbose', action='store_true', help='Enable verbose output for each login attempt')
+    
     parser.add_argument('--extra-delay', type=int, default=10, help='Extra delay (in seconds) to add to the observation window before the next round (Default: 10)')
     parser.add_argument('--check', type=int, nargs='?', const=1, help='Only show policy and user filtering info. Use 2 to also show estimated duration and tries per user')
     parser.add_argument('--time-based-tries', nargs='*', default=[],
                         help='Number of tries followed by the time window, e.g., "3:18:00-03:00"')
+    parser.add_argument('safe-port', type=int, default=9000)
+    parser.add_argument('--verbose', action='store_true', help='Enable verbose output for each login attempt')
     args = parser.parse_args()
 
     server = Server(args.host, get_info=ALL)
@@ -338,6 +362,8 @@ def main():
 
     if args.check == 2:
         return
+    
+    threading.Thread(target=control_listener, args=[args.safe_port,args.verbose], daemon=True).start()
 
     while len(all_attempts) > 0:
         conn = get_connection(server, args.domain, args.domain, args.valid_user, args.valid_pass)
