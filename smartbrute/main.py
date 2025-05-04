@@ -305,8 +305,8 @@ def main():
     parser.add_argument('--check', type=int, nargs='?', const=1, help='Only show policy and user filtering info. Use 2 to also show estimated duration and tries per user')
     parser.add_argument('--time-based-tries', nargs='*', default=[],
                         help='Number of tries followed by the time window, e.g., "3:18:00-03:00"')
-    parser.add_argument('enable-safe-switch', action='store_true', help='Enable safe switch where sending "yes" would pause the execution on a given port')
-    parser.add_argument('safe-port', type=int, default=9000, help="Port of the safe switch")
+    parser.add_argument('--enable-safe-switch', action='store_true', help='Enable safe switch where sending "yes" would pause the execution on a given port')
+    parser.add_argument('--safe-port', type=int, default=9000, help="Port of the safe switch")
     parser.add_argument('--verbose', action='store_true', help='Enable verbose output for each login attempt')
     args = parser.parse_args()
 
