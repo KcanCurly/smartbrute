@@ -301,7 +301,7 @@ def main():
     parser.add_argument('--exclude-regex', nargs='*', default=["krbtgt", "\\$$","MSOL.*", "service.*", "svc.*", "HealthBox.*", "Guest"], help='Regex patterns to exclude usernames')
     parser.add_argument('--patterns', default='patterns.toml', help='TOML file containing password generation patterns')
     parser.add_argument('--only-show-generated-passwords', action='store_true', help='Only print generated passwords without attempting login')
-    parser.add_argument('--extra-delay', type=int, default=10, help='Extra delay (in seconds) to add to the observation window before the next round (Default: 10)')
+    parser.add_argument('--extra-delay', type=int, default=60, help='Extra delay (in seconds) to add to the observation window before the next round (Default: 60)')
     parser.add_argument('--check', type=int, nargs='?', const=1, help='Only show policy and user filtering info. Use 2 to also show estimated duration and tries per user')
     parser.add_argument('--time-based-tries', nargs='*', default=[],
                         help='Number of tries followed by the time window, e.g., "3:18:00-03:00"')
