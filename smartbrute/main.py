@@ -188,11 +188,12 @@ def get_default_naming_context(server, domain, user, password):
 
 def get_lockout_policy(server, base_dn, domain, user, password):
     conn = get_connection(server, domain, user, password)
-    conn.search(base_dn, '(objectClass=domain)', attributes=['lockoutThreshold', 'lockoutDuration', 'lockoutObservationWindow', 'minPwdLength', 'pwdProperties'])
+    conn.search(base_dn, '(objectClass=domain)', attributes=['lockoutThreshold', 'lockoutDuration', 'lockoutObservationWindow', 'minPwdLength', 'pwdProperties', 'pwdHistoryLength'])
     entry = conn.entries[0]
     DOMAIN_PASSWORD_COMPLEX = 1
     pwd_properties  = int(entry['pwdProperties'].value)
     return {
+        'pwdHistoryLength' : entry['pwdHistoryLength'].value,
         'pwdProperties' : bool(pwd_properties & DOMAIN_PASSWORD_COMPLEX),
         'lockoutThreshold': int(entry['lockoutThreshold'].value),
         'lockoutDuration': entry['lockoutDuration'].value.total_seconds(),
@@ -300,12 +301,12 @@ def main():
     parser.add_argument('--exclude-regex', nargs='*', default=["Administrator", "krbtgt", "\\$$","MSOL.*", "service.*", "svc.*", "HealthBox.*", "Guest"], help='Regex patterns to exclude usernames')
     parser.add_argument('--patterns', default='patterns.toml', help='TOML file containing password generation patterns')
     parser.add_argument('--only-show-generated-passwords', action='store_true', help='Only print generated passwords without attempting login')
-    
     parser.add_argument('--extra-delay', type=int, default=10, help='Extra delay (in seconds) to add to the observation window before the next round (Default: 10)')
     parser.add_argument('--check', type=int, nargs='?', const=1, help='Only show policy and user filtering info. Use 2 to also show estimated duration and tries per user')
     parser.add_argument('--time-based-tries', nargs='*', default=[],
                         help='Number of tries followed by the time window, e.g., "3:18:00-03:00"')
-    parser.add_argument('safe-port', type=int, default=9000)
+    parser.add_argument('enable-safe-switch', action='store_true', help='Enable safe switch where sending "yes" would pause the execution on a given port')
+    parser.add_argument('safe-port', type=int, default=9000, help="Port of the safe switch")
     parser.add_argument('--verbose', action='store_true', help='Enable verbose output for each login attempt')
     args = parser.parse_args()
 
@@ -320,6 +321,7 @@ def main():
     print(f"[*] Lockout Duration: {policy['lockoutDuration']} seconds")
     print(f"[*] Password Complexity: {policy['pwdProperties']}")
     print(f"[*] Minimum Password Length: {policy['minPwdLength']}")
+    print(f"[*] Password History Length: {policy['pwdHistoryLength']}")
     if args.verbose:
         print("[*] Enumerating users...")
 
