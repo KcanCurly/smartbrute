@@ -25,7 +25,7 @@ class UserPasswordContainer:
             badpwd_filter = f'(sAMAccountName={self.username})'
             base_dn = server.info.other['defaultNamingContext'][0]
             real_conn.search(search_base=base_dn, search_filter=badpwd_filter, attributes=['badPwdCount'])
-            badpwd = real_conn.entries[0].badPwdCount.value
+            badpwd = real_conn.entries[0]['badPwdCount'].value
             if badpwd + 1 >= lockoutThreshold:
                 if verbose:
                     print(f"[*] Password try for {self.username} was skipped because badpwd was {badpwd} while threshold is {lockoutThreshold}")
@@ -37,7 +37,7 @@ class UserPasswordContainer:
             badpwd_filter = f'(sAMAccountName={self.username})'
             base_dn = server.info.other['defaultNamingContext'][0]
             real_conn.search(search_base=base_dn, search_filter=badpwd_filter, attributes=['badPwdCount'])
-            badpwd2 = real_conn.entries[0].badPwdCount.value
+            badpwd2 = real_conn.entries[0]['badPwdCount'].value
             if badpwd == badpwd2:
                 print(f"[!] {self.passwords[self.password_index]} was an old password for {self.username}")
             self.password_index += 1
@@ -372,7 +372,7 @@ def main():
     while len(all_attempts) > 0:
         conn = get_connection(server, args.domain, args.valid_user, args.valid_pass)
         for container in all_attempts[:]:
-            if container.try_next_password(conn, server, policy['lockoutThreshold'], True):
+            if container.try_next_password(conn, server, policy['lockoutThreshold'], args.verbose):
                 all_attempts.remove(container)
         if args.verbose:
             print(f"[*] Sleeping for {dynamic_delay:.2f} seconds to avoid lockout...")
