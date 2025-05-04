@@ -358,7 +358,7 @@ def main():
     for container in all_attempts:
         print(f"{container.username}:{len(container.passwords)}")
 
-    days, hours, minutes, seconds, end_time = calculate_total_duration(max(all_attempts, key=lambda x: len(x.passwords)), args.tries_per_wait, dynamic_delay, time_based_tries, get_current_time())
+    days, hours, minutes, seconds, end_time = calculate_total_duration(len(max(all_attempts, key=lambda x: len(x.passwords)).passwords), args.tries_per_wait, dynamic_delay, time_based_tries, get_current_time())
     print(f"[*] Estimated total bruteforce duration: {days} days, {hours} hours, {minutes} minutes, {seconds} seconds")
     print(f"[*] Estimated finish time (UTC): {end_time}")
 
