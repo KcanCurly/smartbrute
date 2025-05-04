@@ -330,8 +330,7 @@ def main():
         print(f"[*] Found {len(user_attrs)} users before filtering")
 
     filtered_users = filter_users(user_attrs, args.exclude_regex)
-    if args.verbose or args.check:
-        print(f"[*] {len(filtered_users)} users remaining after filtering")
+
 
     if args.check == 1:
         return
@@ -349,6 +348,9 @@ def main():
         if len(passwords) <= 0:
             continue
         all_attempts.append(UserPasswordContainer(args.domain, user['sAMAccountName'], passwords))
+
+    if args.verbose or args.check:
+        print(f"[*] {len(all_attempts)} users remaining after filtering")
 
     if args.only_show_generated_passwords:
         for container in all_attempts:
@@ -370,12 +372,14 @@ def main():
     threading.Thread(target=control_listener, args=[args.safe_port,args.verbose], daemon=True).start()
 
     while len(all_attempts) > 0:
+        if args.verbose:
+            print(f"[*] Trying at time of {get_current_time()}")
         conn = get_connection(server, args.domain, args.valid_user, args.valid_pass)
         for container in all_attempts[:]:
             if container.try_next_password(conn, server, policy['lockoutThreshold'], args.verbose):
                 all_attempts.remove(container)
         if args.verbose:
-            print(f"[*] Sleeping for {dynamic_delay:.2f} seconds to avoid lockout...")
+            print(f"[*] Sleeping for {dynamic_delay} seconds to avoid lockout...")
         time.sleep(dynamic_delay)
 
 if __name__ == '__main__':
