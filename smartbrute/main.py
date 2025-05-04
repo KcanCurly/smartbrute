@@ -244,7 +244,7 @@ def get_PDC(server, domain, user, password):
 
     # Query fsmoRoleOwner
     pdc_dn = f"CN=DomainDNSZones,{dn}"
-    conn.search(pdc_dn, '(objectClass=*)', search_scope='BASE', attributes=['fsmoRoleOwner'])
+    conn.search(pdc_dn, '(objectClass=*)', search_scope='BASE', attributes=['FSMO-Role-Owner'])
     return conn.entries
 
 
