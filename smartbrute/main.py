@@ -240,8 +240,7 @@ def generate_passwords_from_toml(config_path, user_attributes, min_length, custo
 
 def get_PDC(server, domain, user, password):
     conn = get_connection(server, domain, user, password)
-    conn.search('', '(objectClass=*)', search_scope='BASE', attributes=['defaultNamingContext'])
-    dn = conn.entries[0]['defaultNamingContext'].value
+    dn = server.info.other['defaultNamingContext'][0]
 
     # Query fsmoRoleOwner
     pdc_dn = f"CN=DomainDNSZones,{dn}"
