@@ -243,8 +243,8 @@ def get_PDC(server, domain, user, password):
     dn = server.info.other['defaultNamingContext'][0]
 
     # Query fsmoRoleOwner
-    pdc_dn = f"CN=DomainDNSZones,{dn}"
-    conn.search(pdc_dn, '(objectClass=*)', search_scope='BASE', attributes=['FSMO-Role-Owner'])
+    pdc_dn = f"CN=domainDNS,{dn}"
+    conn.search(pdc_dn, '(objectClass=*)', search_scope='BASE', attributes=['PDC Emulator'])
     return conn.entries
 
 
