@@ -298,7 +298,7 @@ def main():
     parser.add_argument('--valid-user', required=True, help='A known valid domain user (for querying policies)')
     parser.add_argument('--valid-pass', required=True, help='Password of the valid domain user')
     parser.add_argument('--tries-per-wait', type=int, default=1, help='Number of password attempts before waiting for lockout observation window (Default: 1)')
-    parser.add_argument('--exclude-regex', nargs='*', default=["Administrator", "krbtgt", "\\$$","MSOL.*", "service.*", "svc.*", "HealthBox.*", "Guest"], help='Regex patterns to exclude usernames')
+    parser.add_argument('--exclude-regex', nargs='*', default=["krbtgt", "\\$$","MSOL.*", "service.*", "svc.*", "HealthBox.*", "Guest"], help='Regex patterns to exclude usernames')
     parser.add_argument('--patterns', default='patterns.toml', help='TOML file containing password generation patterns')
     parser.add_argument('--only-show-generated-passwords', action='store_true', help='Only print generated passwords without attempting login')
     parser.add_argument('--extra-delay', type=int, default=10, help='Extra delay (in seconds) to add to the observation window before the next round (Default: 10)')
@@ -368,7 +368,7 @@ def main():
     threading.Thread(target=control_listener, args=[args.safe_port,args.verbose], daemon=True).start()
 
     while len(all_attempts) > 0:
-        conn = get_connection(server, args.domain, args.domain, args.valid_user, args.valid_pass)
+        conn = get_connection(server, args.domain, args.valid_user, args.valid_pass)
         for container in all_attempts[:]:
             if container.try_next_password(conn, server, policy['lockoutThreshold'], True):
                 all_attempts.remove(container)
