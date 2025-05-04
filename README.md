@@ -9,5 +9,13 @@ You can find pattern example in ./smartbrute/patterns.toml. Application will sea
 Install with
 pipx install git+https://github.com/kcancurly/smartbrute
 
-Info
+Info:\
 https://learn.microsoft.com/en-us/archive/technet-wiki/32490.active-directory-bad-passwords-and-account-lockout
+
+You should give PDC as your server, you can find it with;\
+`nslookup -type=SRV _ldap._tcp.pdc._msdcs.DOMAIN_NAME \[DNS IP\]`\
+or\
+`dnsrecon -d DOMAIN_NAME \[-ns DNS IP\]`
+
+record should look like this:
+_ldap._tcp.pdc._msdcs.example.local

