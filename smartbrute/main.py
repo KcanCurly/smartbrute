@@ -346,6 +346,8 @@ def main():
 
     for user in filtered_users:
         passwords = generate_passwords_from_toml(args.patterns, user, policy['minPwdLength'], {"complex_password" : policy['pwdProperties']})
+        if len(passwords) <= 0:
+            continue
         all_attempts.append(UserPasswordContainer(args.domain, user['sAMAccountName'], passwords))
 
     if args.only_show_generated_passwords:
