@@ -8,3 +8,6 @@ You can find pattern example in ./smartbrute/patterns.toml. Application will sea
 
 Install with
 pipx install git+https://github.com/kcancurly/smartbrute
+
+Info
+https://learn.microsoft.com/en-us/archive/technet-wiki/32490.active-directory-bad-passwords-and-account-lockout

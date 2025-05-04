@@ -126,12 +126,15 @@ def leetify(word: str, mode: int):
             results.add(''.join(w))
         return list(results)
 
+def get_connection(server, domain, user, password):
+    return Connection(server, user=f"{domain}\\{user}", password=password, auto_bind=True, authentication='NTLM')
+
 def get_default_naming_context(server, domain, user, password):
-    conn = Connection(server, user=f"{domain}\\{user}", password=password, auto_bind=True, authentication='NTLM')
+    conn = get_connection(server, domain, user, password)
     return server.info.other['defaultNamingContext'][0]
 
 def get_lockout_policy(server, base_dn, domain, user, password):
-    conn = Connection(server, user=f"{domain}\\{user}", password=password, auto_bind=True, authentication='NTLM')
+    conn = get_connection(server, domain, user, password)
     conn.search(base_dn, '(objectClass=domain)', attributes=['lockoutThreshold', 'lockoutDuration', 'lockoutObservationWindow', 'minPwdLength', 'pwdProperties'])
     entry = conn.entries[0]
     DOMAIN_PASSWORD_COMPLEX = 1
@@ -235,6 +238,17 @@ def generate_passwords_from_toml(config_path, user_attributes, min_length, custo
                 all_passwords.append((importance, pw))
     return [pw for _, pw in sorted(all_passwords, key=lambda x: -x[0])]
 
+def get_PDC(server, domain, user, password):
+    conn = get_connection(server, domain, user, password)
+    conn.search('', '(objectClass=*)', search_scope='BASE', attributes=['defaultNamingContext'])
+    dn = conn.entries[0]['defaultNamingContext'].value
+
+    # Query fsmoRoleOwner
+    pdc_dn = f"CN=DomainDNSZones,{dn}"
+    conn.search(pdc_dn, '(objectClass=*)', search_scope='BASE', attributes=['fsmoRoleOwner'])
+    return conn.entries
+
+
 def main():
     parser = argparse.ArgumentParser(description='LDAP Bruteforcer for Active Directory')
     parser.add_argument('--host', required=True, help='IP or hostname of the LDAP server')
@@ -255,6 +269,7 @@ def main():
     server = Server(args.host, get_info=ALL)
     base_dn = get_default_naming_context(server, args.domain, args.valid_user, args.valid_pass)
     policy = get_lockout_policy(server, base_dn, args.domain, args.valid_user, args.valid_pass)
+    pdc = get_PDC(server, args.domain, args.valid_user, args.valid_pass)
 
     dynamic_delay = policy['lockoutObservationWindow'] + args.extra_delay if policy['lockoutObservationWindow'] > 0 else 1.0 + args.extra_delay
 
@@ -263,6 +278,7 @@ def main():
     print(f"[*] Lockout Duration: {policy['lockoutDuration']} seconds")
     print(f"[*] Password Complexity: {policy['pwdProperties']}")
     print(f"[*] Minimum Password Length: {policy['minPwdLength']}")
+    print(f"[*] PDC: {pdc}")
     if args.verbose:
         print("[*] Enumerating users...")
 
