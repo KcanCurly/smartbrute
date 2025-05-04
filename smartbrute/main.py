@@ -81,7 +81,7 @@ def parse_time_window(time_str):
 
 def get_current_time():
     """Return the current UTC time"""
-    return datetime.now(timezone.utc)
+    return datetime.now()
 
 
 def calculate_total_duration(max_passwords, tries_per_wait, dynamic_delay, time_based_tries, start_time):
