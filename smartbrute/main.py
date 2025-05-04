@@ -26,10 +26,10 @@ class UserPasswordContainer:
             base_dn = server.info.other['defaultNamingContext'][0]
             real_conn.search(search_base=base_dn, search_filter=badpwd_filter, attributes=['badPwdCount'])
             badpwd = real_conn.entries[0]['badPwdCount'].value
-            if badpwd + 1 >= lockoutThreshold:
-                if verbose:
-                    print(f"[*] Password try for {self.username} was skipped because badpwd was {badpwd} while threshold is {lockoutThreshold}")
-                return False
+            # if badpwd + 1 >= lockoutThreshold:
+            #    if verbose:
+            #        print(f"[*] Password try for {self.username} was skipped because badpwd was {badpwd} while threshold is {lockoutThreshold}")
+            #    return False
             conn = Connection(server, user=f'{self.domain}\\{self.username}', password=self.passwords[self.password_index], auto_bind=True, authentication='NTLM')
             print(f"[+] VALID CREDENTIAL FOUND: {self.username}:{self.passwords[self.password_index]}")
             return True
