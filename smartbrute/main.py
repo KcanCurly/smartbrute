@@ -1,5 +1,6 @@
 import argparse
 import re
+import string
 import time
 import toml
 from ldap3 import Server, Connection, ALL
@@ -54,6 +55,16 @@ LEET_MAP = {
     't': '7',
     'b': '8',
 }
+
+def is_complex(s):
+    conditions = [
+        any(c.islower() for c in s),                  # lowercase
+        any(c.isupper() for c in s),                  # uppercase
+        any(c.isdigit() for c in s),                  # digit
+        any(c in string.punctuation for c in s)       # special character
+    ]
+    
+    return sum(conditions) >= 3
 
 pause_flag = threading.Event()
 
@@ -245,6 +256,7 @@ def generate_passwords_from_toml(config_path, user_attributes, min_length, custo
         else:
             raise FileNotFoundError(f"Could not find the TOML configuration file: {config_path}")
 
+    added_passwords = set()
     all_passwords = []
     globals_config = config.get("globals", {})
     patterns = config.get("pattern", [])
@@ -269,9 +281,13 @@ def generate_passwords_from_toml(config_path, user_attributes, min_length, custo
         passwords = []
 
         if code:
+            second_name = ""
+            if " " in first_name:
+                first_name, second_name = first_name.split()
             local_vars = {
                 "username": username,
                 "first_name": first_name,
+                "second_name": second_name,
                 "last_name": last_name,
                 "passwords": passwords,
             }
@@ -288,7 +304,15 @@ def generate_passwords_from_toml(config_path, user_attributes, min_length, custo
 
         for pw in passwords:
             if len(pw) >= min_length:
-                all_passwords.append((importance, pw))
+                if pw in added_passwords:
+                    continue
+                else:
+                    added_passwords.add(pw)
+                if not custom_vars["complex_password"]:
+                    all_passwords.append((importance, pw))
+                elif is_complex(pw):
+                    all_passwords.append((importance, pw))
+
     return all_passwords
 
 def main():
