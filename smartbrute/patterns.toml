@@ -270,7 +270,7 @@ passwords += variants
 
 # Semi static Turkish
 [[pattern]]
-importance = 9
+importance = 2
 code = """
 passwords += [
     f"Bugun{symbol}{year}"

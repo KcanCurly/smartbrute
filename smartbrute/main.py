@@ -245,6 +245,76 @@ def try_bind(server, domain, username, password):
     except LDAPBindError:
         return False
 
+def generate_password_from_company(company_names, config_path, min_length, custom_vars = {}):
+    if os.path.isfile(config_path):
+        config = toml.load(config_path)
+    else:
+        script_dir = os.path.dirname(os.path.realpath(__file__))
+        alt_path = os.path.join(script_dir, config_path)
+        if os.path.isfile(alt_path):
+            config = toml.load(alt_path)
+        else:
+            raise FileNotFoundError(f"Could not find the TOML configuration file: {config_path}")
+
+    added_passwords = set()
+    all_passwords = []
+    globals_config = config.get("globals", {})
+    patterns = config.get("pattern", [])
+
+    for entry in patterns:
+        importance = entry.get("importance", 0)
+        code = entry.get("code")
+        years = entry.get("years", [])
+        symbols = entry.get("symbols", [""])
+        static = entry.get("static", False)
+
+        if not isinstance(years, list):
+            years = [str(years)]
+
+
+        passwords = []
+
+        for cname in company_names:
+            if code:
+                first_name = cname
+                second_name = ""
+                last_name = ""
+
+                local_vars = {
+                    "first_name": first_name,
+                    "second_name": second_name,
+                    "last_name": last_name,
+                    "passwords": passwords,
+                }
+
+
+                # Inject all other user-defined TOML variables into local_vars
+                for k, v in entry.items():
+                    if k not in ("template", "code", "importance"):
+                        local_vars[k] = v
+
+                combined_vars = globals_config.copy()
+                combined_vars.update(custom_vars)
+                combined_vars.update(local_vars)
+
+                try:
+                    exec(code, {}, combined_vars)
+                except Exception as e:
+                    print(f"Error {e} on company_name {cname}")
+
+        for pw in passwords:
+            if len(pw) >= min_length:
+                if pw in added_passwords:
+                    continue
+                else:
+                    added_passwords.add(pw)
+                if not custom_vars["complex_password"]:
+                    all_passwords.append((importance, pw))
+                elif is_complex(pw):
+                    all_passwords.append((importance, pw))
+
+    return all_passwords
+
 def generate_passwords_from_toml(config_path, user_attributes, min_length, custom_vars = {}):
     if os.path.isfile(config_path):
         config = toml.load(config_path)
@@ -284,21 +354,15 @@ def generate_passwords_from_toml(config_path, user_attributes, min_length, custo
             second_name = ""
             if " " in first_name:
                 first_name, second_name = first_name.split(" ", 1)
-            if second_name:
-                local_vars = {
-                    "username": username,
-                    "first_name": first_name,
-                    "second_name": second_name,
-                    "last_name": last_name,
-                    "passwords": passwords,
-                }
-            else:
-                local_vars = {
-                    "username": username,
-                    "first_name": first_name,
-                    "last_name": last_name,
-                    "passwords": passwords,
-                }
+
+            local_vars = {
+                "username": username,
+                "first_name": first_name,
+                "second_name": second_name,
+                "last_name": last_name,
+                "passwords": passwords,
+            }
+
 
             # Inject all other user-defined TOML variables into local_vars
             for k, v in entry.items():
@@ -339,6 +403,7 @@ def main():
     parser.add_argument('--only-show-generated-passwords', action='store_true', help='Only print generated passwords without attempting login')
     parser.add_argument('--extra-delay', type=int, default=60, help='Extra delay (in seconds) to add to the observation window before the next round (Default: 60)')
     parser.add_argument('--check', type=int, nargs='?', const=1, help='Only show policy and user filtering info. Use 2 to also show estimated duration and tries per user')
+    parser.add_argument('--company-names', nargs='*', default=[])
     parser.add_argument('--time-based-tries', nargs='*', default=[],
                         help='Number of tries followed by the time window, e.g., "3:18:00-03:00"')
     parser.add_argument('--enable-safe-switch', action='store_true', help='Enable safe switch where sending "yes" would pause the execution on a given port')
@@ -378,12 +443,13 @@ def main():
     time_based_tries = parse_time_based_tries(args.time_based_tries)
 
     all_attempts: List[UserPasswordContainer] = []
+    company_passwords = generate_password_from_company(args.company_names, args.patterns, policy['minPwdLength'], {"complex_password" : policy['pwdProperties']})
 
     for user in filtered_users:
         passwords = generate_passwords_from_toml(args.patterns, user, policy['minPwdLength'], {"complex_password" : policy['pwdProperties']})
         if len(passwords) <= 0:
             continue
-        all_attempts.append(UserPasswordContainer(args.domain, user['sAMAccountName'], passwords))
+        all_attempts.append(UserPasswordContainer(args.domain, user['sAMAccountName'], passwords + company_passwords))
 
     if args.verbose or args.check:
         print(f"[*] {len(all_attempts)} users remaining after filtering")
