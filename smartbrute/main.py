@@ -311,7 +311,10 @@ def generate_passwords_from_toml(config_path, user_attributes, min_length, custo
             print(local_vars)
             print(custom_vars)
             print(combined_vars)
-            exec(code, {}, combined_vars)
+            try:
+                exec(code, {}, combined_vars)
+            except Exception as e:
+                print(f"Error {e} on user {username}")
 
         for pw in passwords:
             if len(pw) >= min_length:
