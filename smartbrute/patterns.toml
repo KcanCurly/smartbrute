@@ -310,16 +310,8 @@ passwords += [
 ]
 """
 
-
 [[pattern]]
 importance = 10000
-code = """
-passwords.append("Aa12456")
-"""
-
-# Plakalar Turkish
-[[pattern]]
-importance = 1
 code = """
 passwords.append("Aa12456")
 """
