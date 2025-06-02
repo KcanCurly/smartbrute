@@ -284,13 +284,21 @@ def generate_passwords_from_toml(config_path, user_attributes, min_length, custo
             second_name = ""
             if " " in first_name:
                 first_name, second_name = first_name.split()
-            local_vars = {
-                "username": username,
-                "first_name": first_name,
-                "second_name": second_name,
-                "last_name": last_name,
-                "passwords": passwords,
-            }
+            if second_name:
+                local_vars = {
+                    "username": username,
+                    "first_name": first_name,
+                    "second_name": second_name,
+                    "last_name": last_name,
+                    "passwords": passwords,
+                }
+            else:
+                local_vars = {
+                    "username": username,
+                    "first_name": first_name,
+                    "last_name": last_name,
+                    "passwords": passwords,
+                }
 
             # Inject all other user-defined TOML variables into local_vars
             for k, v in entry.items():
