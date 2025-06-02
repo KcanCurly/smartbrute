@@ -283,7 +283,7 @@ def generate_passwords_from_toml(config_path, user_attributes, min_length, custo
         if code:
             second_name = ""
             if " " in first_name:
-                first_name, second_name = first_name.split()
+                first_name, second_name = first_name.split(" ", 1)
             if second_name:
                 local_vars = {
                     "username": username,
@@ -308,9 +308,7 @@ def generate_passwords_from_toml(config_path, user_attributes, min_length, custo
             combined_vars = globals_config.copy()
             combined_vars.update(custom_vars)
             combined_vars.update(local_vars)
-            print(local_vars)
-            print(custom_vars)
-            print(combined_vars)
+
             try:
                 exec(code, {}, combined_vars)
             except Exception as e:
