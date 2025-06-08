@@ -50,7 +50,7 @@ LEET_MAP = {
     'b': '8',
 }
 
-def is_complex(s):
+def is_complex(s, vars):
     conditions = [
         any(c.islower() for c in s),                  # lowercase
         any(c.isupper() for c in s),                  # uppercase
@@ -58,7 +58,7 @@ def is_complex(s):
         any(c in string.punctuation for c in s)       # special character
     ]
     
-    return sum(conditions) >= 3
+    return sum(conditions) >= 3 and vars["first_name"] not in s and vars["last_name"] not in s
 
 pause_flag = threading.Event()
 
@@ -311,7 +311,7 @@ def generate_passwords_from_toml(config_path, company_names, user_attributes, mi
                     added_passwords.add(pw)
                 if not custom_vars["complex_password"]:
                     all_passwords.append((importance, pw))
-                elif is_complex(pw):
+                elif is_complex(pw, local_vars):
                     all_passwords.append((importance, pw))
 
     return all_passwords

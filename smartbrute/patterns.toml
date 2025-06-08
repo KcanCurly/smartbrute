@@ -1,6 +1,6 @@
 [globals]
-years = [2023, 2024, 2025]
-years_short = [23, 24, 25]
+years = [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]
+years_short = [18, 19, 20, 21, 22, 23, 24, 25]
 symbols = ["", ".", "*", "**", "!"]
 symbols2 = ["!!**"]
 months = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
@@ -8,84 +8,108 @@ numbers = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
 
 # Example2025
 # Example*2025
+# Example25
+# Example*25
 [[pattern]]
 importance = 10
 code = """
-if not complex_password:
-    passwords += [
-        f"{first_name[0].upper()}{first_name[1:].lower()}{symbol}{year}"
-        for year in years
-        for symbol in symbols
-    ]
+passwords += [
+    f"{first_name[0].upper()}{first_name[1:].lower()}{symbol}{year}"
+    for year in years
+    for symbol in symbols
+]
+passwords += [
+    f"{first_name[0].upper()}{first_name[1:].lower()}{symbol}{year}"
+    for year in years_short
+    for symbol in symbols
+]
 """
 
 # example2025
 # example*2025
+# example25
+# example*25
 [[pattern]]
 importance = 10
 code = """
-if not complex_password:
-    passwords += [
-        f"{first_name.lower()}{symbol}{year}"
-        for year in years
-        for symbol in symbols
-    ]
+passwords += [
+    f"{first_name.lower()}{symbol}{year}"
+    for year in years
+    for symbol in symbols
+]
+passwords += [
+    f"{first_name.lower()}{symbol}{year}"
+    for year in years_short
+    for symbol in symbols
+]
 """
 
 # EXAMPLE2025
 # EXAMPLE*2025
+# EXAMPLE25
+# EXAMPLE*25
 [[pattern]]
 importance = 10
 code = """
-if not complex_password:
-    passwords += [
-        f"{first_name.upper()}{symbol}{year}"
-        for year in years
-        for symbol in symbols
-    ]
+passwords += [
+    f"{first_name.upper()}{symbol}{year}"
+    for year in years
+    for symbol in symbols
+]
+passwords += [
+    f"{first_name.upper()}{symbol}{year}"
+    for year in years_short
+    for symbol in symbols
+]
 """
 
-# Example2025
-# Example*2025
+# Example062025
+# Example*062025
+# Example0625
+# Example*0625
 [[pattern]]
 importance = 10
 code = """
-if not complex_password:
-    passwords += [
-        f"{first_name[0].upper()}{first_name[1:].lower()}{symbol}{month}{year}"
-        for year in years
-        for symbol in symbols
-        for month in months
-    ]
+passwords += [
+    f"{first_name[0].upper()}{first_name[1:].lower()}{symbol}{month}{year}"
+    for year in years
+    for symbol in symbols
+    for month in months
+]
+passwords += [
+    f"{first_name[0].upper()}{first_name[1:].lower()}{symbol}{month}{year}"
+    for year in years_short
+    for symbol in symbols
+    for month in months
+]
 """
 
-# example2025
-# example*2025
+# example062025
+# example*062025
 [[pattern]]
 importance = 10
 code = """
-if not complex_password:
-    passwords += [
-        f"{first_name.lower()}{symbol}{month}{year}"
-        for year in years
-        for symbol in symbols
-        for month in months
-    ]
+passwords += [
+    f"{first_name.lower()}{symbol}{month}{year}"
+    for year in years
+    for symbol in symbols
+    for month in months
+]
 """
 
-# EXAMPLE2025
-# EXAMPLE*2025
+# EXAMPLE062025
+# EXAMPLE*062025
 [[pattern]]
 importance = 10
 code = """
-if not complex_password:
-    passwords += [
-        f"{first_name.upper()}{symbol}{month}{year}"
-        for year in years
-        for symbol in symbols
-        for month in months
-    ]
+passwords += [
+    f"{first_name.upper()}{symbol}{month}{year}"
+    for year in years
+    for symbol in symbols
+    for month in months
+]
 """
+
 
 
 # Ee2025
@@ -107,6 +131,19 @@ importance = 10
 code = """
 passwords += [
     f"{first_name[0].upper()}{last_name[0].lower()}{symbol}{month}{year}"
+    for symbol in symbols
+    for year in years
+    for month in months
+]
+"""
+
+# ee062025 (last_name first)
+# ee06*2025 (last_name first)
+[[pattern]]
+importance = 10
+code = """
+passwords += [
+    f"{last_name[0].lower()}{first_name[0].lower()}{month}{symbol}{year}"
     for symbol in symbols
     for year in years
     for month in months
@@ -269,21 +306,236 @@ for i in range(1, len(digits2) + 1):
 passwords += variants
 """
 
-# Company Stuff
-
-# Company2025
+# EXAMPLE.E2025
 [[pattern]]
-importance = 2
+importance = 8
 code = """
 passwords += [
-    f"{company_name[0].upper()}{company_name[1:].lower()}{year}"
-    for symbol in symbols
+    f"{first_name.upper()}.{last_name[0].upper()}{year}"
     for year in years
-    for company_name in company_names
 ]
 """
 
+# 2025Example
+[[pattern]]
+importance = 8
+code = """
+passwords += [
+    f"{year}{first_name[0].upper()}{first_name[1:].lower()}"
+    for year in years
+]
+"""
+
+# eexample25
+# Eexample25
+[[pattern]]
+importance = 8
+code = """
+passwords += [
+    f"{first_name[0].lower()}{last_name.lower()}{year}"
+    for year in years_short
+]
+passwords += [
+    f"{first_name[0].upper()}{last_name.lower()}{year}"
+    for year in years_short
+]
+"""
+
+# Slices of first_name and last_name
+# First name up to 4, last name up to 4
+[[pattern]]
+importance = 7
+code = """
+max_len = 4
+max1 = min(len(first_name), max_len)
+max2 = min(len(last_name), max_len)
+
+slices = [
+    word1[:i] + word2[:j]
+    for i in range(0, max1 + 1)
+    for j in range(0, max2 + 1)
+    if i != 0 or j != 0
+]
+
+passwords += [
+    f"{slice}{year}"
+    for slice in slices
+    for year in years
+]
+passwords += [
+    f"{slice}{year}"
+    for slice in slices
+    for year in years_short
+]
+passwords += [
+    f"{slice}{month}{year}"
+    for slice in slices
+    for month in months
+    for year in years
+]
+passwords += [
+    f"{slice}{month}{year}"
+    for slice in slices
+    for month in months
+    for year in years_short
+]
+passwords += [
+    f"{slice[0].upper()}{slice[1:].lower()}{year}"
+    for slice in slices
+    for year in years
+]
+passwords += [
+    f"{slice[0].upper()}{slice[1:].lower()}{year}"
+    for slice in slices
+    for year in years_short
+]
+passwords += [
+    f"{slice[0].upper()}{slice[1:].lower()}{month}{year}"
+    for slice in slices
+    for month in months
+    for year in years
+]
+passwords += [
+    f"{slice[0].upper()}{slice[1:].lower()}{month}{year}"
+    for slice in slices
+    for month in months
+    for year in years_short
+]
+"""
+
+
+# exam2025
+[[pattern]]
+importance = 8
+code = """
+if len(first_name) >= 4:
+    passwords += [
+        f"{first_name[0:4].lower()}{year}"
+        for year in years
+    ]
+"""
+
+# exae2025
+# exae25
+[[pattern]]
+importance = 8
+code = """
+if len(first_name) >= 3:
+    passwords += [
+        f"{first_name[0:3].lower()}{last_name[0].lower()}{year}"
+        for year in years
+    ]
+    passwords += [
+        f"{first_name[0:3].lower()}{last_name[0].lower()}{year}"
+        for year in years_short
+    ]
+"""
+
+# exe2025
+# exe25
+# Exe2025
+# Exe25
+[[pattern]]
+importance = 8
+code = """
+if len(first_name) >= 2:
+    passwords += [
+        f"{first_name[0:2].lower()}{last_name[0].lower()}{year}"
+        for year in years
+    ]
+    passwords += [
+        f"{first_name[0:2].lower()}{last_name[0].lower()}{year}"
+        for year in years_short
+    ]
+    passwords += [
+        f"{first_name[0].upper()}{first_name[1].lower()}{last_name[0].lower()}{year}"
+        for year in years
+    ]
+    passwords += [
+        f"{first_name[0].upper()}{first_name[1].lower()}{last_name[0].lower()}{year}"
+        for year in years_short
+    ]
+"""
+
+# eexa2025
+# eexa25
+# Eexa2025
+# Eexa25
+[[pattern]]
+importance = 8
+code = """
+if len(last_name) >= 3:
+    passwords += [
+        f"{first_name[0].lower()}{last_name[0:3].lower()}{year}"
+        for year in years
+    ]
+    passwords += [
+        f"{first_name[0].lower()}{last_name[0:3].lower()}{year}"
+        for year in years_short
+    ]
+    passwords += [
+        f"{first_name[0].upper()}{last_name[0:3].lower()}{year}"
+        for year in years
+    ]
+    passwords += [
+        f"{first_name[0].upper()}{last_name[0:3].lower()}{year}"
+        for year in years_short
+    ]
+"""
+
+# exex2025
+# exex25
+# Exex2025
+# Exex25
+[[pattern]]
+importance = 8
+code = """
+if len(first_name) >= 2 and len(last_name) >= 2:
+    passwords += [
+        f"{first_name[0:1].lower()}{last_name[0:1].lower()}{year}"
+        for year in years
+    ]
+    passwords += [
+        f"{first_name[0:1].lower()}{last_name[0:1].lower()}{year}"
+        for year in years_short
+    ]
+    passwords += [
+        f"{first_name[0].upper()}{first_name[1].lower()}{last_name[0:1].lower()}{year}"
+        for year in years
+    ]
+    passwords += [
+        f"{first_name[0].upper()}{first_name[1].lower()}{last_name[0:1].lower()}{year}"
+        for year in years_short
+    ]
+"""
+
+# (E)xample(E)xampl(E)0625
+[[pattern]]
+importance = 8
+code = """
+passwords += [
+    f"{first_name[0].upper()}{last_name[0].upper()}{last_name[-1].upper()}{month}{year}"
+    for month in months
+    for year in years_short
+]
+"""
+
+# 123456EE
+[[pattern]]
+importance = 8
+code = """
+passwords += [
+    f"123456{first_name[0].upper()}{last_name[0].upper()}"
+]
+"""
+
+
+#################
+# Company Stuff #
+#################
+
 # Company2025
+# Company2025*
 [[pattern]]
 importance = 9
 code = """
@@ -292,12 +544,6 @@ passwords += [
     for year in years
     for company_name in company_names
 ]
-"""
-
-# Company2025!
-[[pattern]]
-importance = 9
-code = """
 passwords += [
     f"{company_name[0].upper()}{company_name[1:].lower()}{year}{symbol}"
     for symbol in symbols
@@ -312,10 +558,16 @@ passwords += [
 ]
 """
 
-# cOmpany2025!
+# cOmpany2025
+# cOmpany2025*
 [[pattern]]
 importance = 9
 code = """
+passwords += [
+    f"{company_name[0].lower()}{company_name[0].upper()}{company_name[2:].lower()}{year}"
+    for year in years
+    for company_name in company_names
+]
 passwords += [
     f"{company_name[0].lower()}{company_name[0].upper()}{company_name[2:].lower()}{year}{symbol}"
     for symbol in symbols
@@ -329,6 +581,8 @@ passwords += [
     for company_name in company_names
 ]
 """
+
+
 
 # Semi static Turkish
 [[pattern]]
@@ -369,6 +623,11 @@ passwords += [
     for symbol in symbols
     for year in years
     for month in months
+]
+passwords += [
+    f"Acilis{symbol}{year}"
+    for symbol in symbols
+    for year in years
 ]
 """
 
