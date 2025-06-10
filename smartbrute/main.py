@@ -57,8 +57,18 @@ def is_complex(s, vars):
         any(c.isdigit() for c in s),                  # digit
         any(c in string.punctuation for c in s)       # special character
     ]
+    if vars["first_name"] and vars["last_name"]:
+        return sum(conditions) >= 3 and vars["first_name"] not in s and vars["last_name"] not in s
+    else: 
+        if vars["first_name"]:
+            return sum(conditions) >= 3 and vars["first_name"]
+        else:
+            if vars["last_name"]:
+                return sum(conditions) >= 3 and vars["last_name"]
+            else:
+                return sum(conditions) >= 3
     
-    return sum(conditions) >= 3 and vars["first_name"] not in s and vars["last_name"] not in s
+
 
 pause_flag = threading.Event()
 
