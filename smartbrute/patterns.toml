@@ -351,7 +351,7 @@ max1 = min(len(first_name), max_len)
 max2 = min(len(last_name), max_len)
 
 slices = [
-    word1[:i] + word2[:j]
+    first_name[:i] + last_name[:j]
     for i in range(0, max1 + 1)
     for j in range(0, max2 + 1)
     if i != 0 or j != 0
