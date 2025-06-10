@@ -51,22 +51,25 @@ LEET_MAP = {
 }
 
 def is_complex(s, vars):
-    conditions = [
-        any(c.islower() for c in s),                  # lowercase
-        any(c.isupper() for c in s),                  # uppercase
-        any(c.isdigit() for c in s),                  # digit
-        any(c in string.punctuation for c in s)       # special character
-    ]
-    if vars["first_name"] and vars["last_name"]:
-        return sum(conditions) >= 3 and vars["first_name"] not in s and vars["last_name"] not in s
-    else: 
-        if vars["first_name"]:
-            return sum(conditions) >= 3 and vars["first_name"]
-        else:
-            if vars["last_name"]:
-                return sum(conditions) >= 3 and vars["last_name"]
+    try:
+        conditions = [
+            any(c.islower() for c in s),                  # lowercase
+            any(c.isupper() for c in s),                  # uppercase
+            any(c.isdigit() for c in s),                  # digit
+            any(c in string.punctuation for c in s)       # special character
+        ]
+        if vars["first_name"] and vars["last_name"]:
+            return sum(conditions) >= 3 and vars["first_name"].lower() not in s.lower() and vars["last_name"].lower() not in s.lower()
+        else: 
+            if vars["first_name"]:
+                return sum(conditions) >= 3 and vars["first_name"].lower() not in s.lower()
             else:
-                return sum(conditions) >= 3
+                if vars["last_name"]:
+                    return sum(conditions) >= 3 and vars["last_name"].lower() not in s.lower()
+                else:
+                    return sum(conditions) >= 3
+    except Exception:
+        return None
     
 
 
@@ -311,7 +314,8 @@ def generate_passwords_from_toml(config_path, company_names, user_attributes, mi
             try:
                 exec(code, {}, combined_vars)
             except Exception as e:
-                print(f"Error {e} on user {username}")
+                pass
+                # print(f"Error {e} on user {username}")
 
         for pw in passwords:
             if len(pw) >= min_length:
