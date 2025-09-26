@@ -9,8 +9,7 @@ from ldap3.core.exceptions import LDAPBindError
 from typing import List, Dict
 import os
 from itertools import combinations
-from datetime import datetime
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 import socket
 import threading
 
@@ -33,8 +32,9 @@ class UserPasswordContainer:
                if verbose:
                   print(f"[*] Password try for {self.username} was skipped because badpwd was {badpwd} while threshold is {self.lockoutThreshold}")
                return False
-            conn = Connection(server, user=f'{self.domain}\\{self.username}', password=self.passwords[self.password_index], auto_bind=True, authentication='NTLM')
-            print(f"[+] VALID CREDENTIAL FOUND: {self.username}:{self.passwords[self.password_index]}")
+            conn = get_connection(server, self.domain, self.username, self.passwords[self.password_index])
+            if conn:
+                print(f"[+] VALID CREDENTIAL FOUND: {self.username}:{self.passwords[self.password_index]}")
             return True
         except LDAPBindError:
             return False
@@ -279,13 +279,6 @@ def filter_users(user_attrs: List[Dict], exclude_regexes: List[str]) -> List[Dic
         filtered.append(user)
     return filtered
 
-def try_bind(server, domain, username, password):
-    try:
-        conn = Connection(server, user=f'{domain}\\{username}', password=password, auto_bind=True, authentication='NTLM')
-        return True
-    except LDAPBindError:
-        return False
-
 def generate_passwords_from_toml(config_path, company_names, user_attributes, min_length, custom_vars = {}):
     if os.path.isfile(config_path):
         config = toml.load(config_path)
@@ -370,11 +363,11 @@ def main():
     parser.add_argument('--username', required=True, help='A known valid domain user (for querying policies)')
     parser.add_argument('--password', required=True, help='Password of the valid domain user')
     parser.add_argument('--tries-per-wait', type=int, default=1, help='Number of password attempts before waiting for lockout observation window (Default: 1)')
-    parser.add_argument('--exclude-regex', nargs='*', default=["krbtgt", "\\$$","MSOL.*", "HealthBox.*", "Guest"], help='Regex patterns to exclude usernames')
+    parser.add_argument('--exclude-regex', nargs='*', default=["krbtgt", "\\$$","MSOL.*", "HealthBox.*", "Guest"], help='Regex patterns to exclude usernames (Default: $*, MSOL.*, HealthBox.*, Guest)')
     parser.add_argument('--patterns', default='patterns.toml', help='TOML file containing password generation patterns')
     parser.add_argument('--only-show-generated-passwords', action='store_true', help='Only print generated passwords without attempting login')
     parser.add_argument('--extra-delay', type=int, default=60, help='Extra delay (in seconds) to add to the observation window before the next round (Default: 60)')
-    parser.add_argument('--check', type=int, nargs='?', const=1, help='Only show policy and user filtering info. Use 2 to also show estimated duration and tries per user')
+    parser.add_argument('--check', type=int, nargs='?', const=1, help='1: Only show policy and user filtering info. 2: to also show estimated duration and tries per user')
     parser.add_argument('--company-names', nargs='*', default=[], help="Company names to permutate from. Generated passswords added to every user.")
     parser.add_argument('--time-based-tries', nargs='*', default=[],
                         help='Number of tries followed by the time window, e.g., "3:18:00-03:00"')
