@@ -634,5 +634,5 @@ passwords += [
 [[pattern]]
 importance = 10000
 code = """
-passwords += ["Aa123456"]
+passwords += ["Aa123456", "Bb123456", "1234qwer*", "qwer1234*", "qwer1234", "1234qwer", "1234qwert", "qwert1234"]
 """

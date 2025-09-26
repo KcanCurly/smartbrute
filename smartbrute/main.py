@@ -1,9 +1,10 @@
 import argparse
 import re
+import ssl
 import string
 import time
 import toml
-from ldap3 import Server, Connection, ALL
+from ldap3 import ALL, NTLM, Connection, Server, SUBTREE, Tls, TLS_CHANNEL_BINDING
 from ldap3.core.exceptions import LDAPBindError
 from typing import List, Dict
 import os
@@ -198,8 +199,40 @@ def leetify(word: str, mode: int):
             results.add(''.join(w))
         return list(results)
 
+def create_ldap_server(server, use_ssl):
+    if use_ssl:
+        tls = Tls(validate=ssl.CERT_NONE)
+        return Server(server, use_ssl=True, tls=tls, get_info=ALL)
+    return Server(server, get_info=ALL)
+
 def get_connection(server, domain, user, password):
-    return Connection(server, user=f"{domain}\\{user}", password=password, auto_bind=True, authentication='NTLM')
+    conn = None
+    try:
+        try:
+            server = create_ldap_server(server, True)
+            conn = Connection(
+                server,
+                user=f"{domain}\\{user}",
+                password=password,
+                authentication=NTLM,
+                auto_referrals=False,
+                channel_binding=TLS_CHANNEL_BINDING,
+            )
+            if not conn.bind():
+                raise LDAPBindError("Channel binding failed")
+        except (ssl.SSLError, socket.error, LDAPBindError) as e:
+            server = create_ldap_server(server, False)
+            conn = Connection(
+                server,
+                user=f"{domain}\\{user}",
+                password=password,
+                authentication=NTLM
+            )
+            if not conn.bind():
+                return None
+    except Exception as e:
+        return None
+    return conn
 
 def get_default_naming_context(server, domain, user, password):
     conn = get_connection(server, domain, user, password)
