@@ -286,7 +286,7 @@ def generate_passwords_from_toml(config_path, company_names, user_attributes, mi
                 # print(f"Error {e} on user {username}")
 
         for pw in passwords:
-            if len(pw) >= min_length:
+            if len(pw) >= int(min_length):
                 if pw in added_passwords:
                     continue
                 else:
