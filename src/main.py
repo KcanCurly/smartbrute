@@ -259,8 +259,11 @@ def get_lockout_policy_impacket(conn):
         return i
     
 def enumerate_user_attributes_impacket(conn):
-    for i in conn.search("(&(objectCategory=person)(objectClass=user))", ['samaccountName', 'givenname', 'sn']):
-        print(i)
+    z = []
+    for i in conn.search("(&(objectCategory=person)(objectClass=user))", ['samaccountname', 'givenname', 'sn']):
+        z.append(i)
+
+    return z
 
 
 def enumerate_user_attributes(server, base_dn, domain, user, password):
@@ -421,7 +424,7 @@ def main():
         passwords = generate_passwords_from_toml(args.patterns, args.company_names, user, policy['minpwdlength'], {"complex_password" : policy['pwdproperties']})
         if len(passwords) <= 0:
             continue
-        all_attempts.append(UserPasswordContainer(args.domain, user.get("samaccountName", ""), passwords, policy['lockoutthreshold']))
+        all_attempts.append(UserPasswordContainer(args.domain, user.get("samaccountname", ""), passwords, policy['lockoutthreshold']))
 
     if args.verbose or args.check:
         print(f"[*] {len(all_attempts)} users remaining after filtering")
