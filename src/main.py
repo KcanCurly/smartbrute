@@ -381,12 +381,12 @@ def main():
     parser.add_argument('--verbose', action='store_true', help='Enable verbose output for each login attempt')
     args = parser.parse_args()
 
-    try:
-        server = Server(args.host, get_info=ALL)
-        base_dn = get_default_naming_context(server, args.domain, args.username, args.password)
-    except Exception as e:
-        server = Server(args.host, get_info=ALL, use_ssl=True, tls=Tls(validate=ssl.CERT_NONE))
-        base_dn = get_default_naming_context(server, args.domain, args.username, args.password)
+    #try:
+    #    server = Server(args.host, get_info=ALL)
+    #    base_dn = get_default_naming_context(server, args.domain, args.username, args.password)
+    #except Exception as e:
+    #    server = Server(args.host, get_info=ALL, use_ssl=True, tls=Tls(validate=ssl.CERT_NONE))
+    #    base_dn = get_default_naming_context(server, args.domain, args.username, args.password)
 
     conn = ImpacketLDAPConnector(args.host, 1, args.domain, args.username, args.password)
 
