@@ -13,6 +13,10 @@ setup(
     install_requires=[
         "ldap3 @ git+https://github.com/ly4k/ldap3",
         "toml",
+        "PyYAML",
+        "colorama",
+        "impacket==0.9.23",
+        "pyOpenSSL",
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
