@@ -379,6 +379,9 @@ def main():
     if args.check == 2:
         return
     
+    print("Under construction, only --only-show-generated-passwords works for now. The actual bruteforce logic will be added in the next updates.")
+    return
+    
     threading.Thread(target=control_listener, args=[args.safe_port, args.verbose], daemon=True).start()
 
     while len(all_attempts) > 0:
