@@ -200,60 +200,6 @@ def leetify(word: str, mode: int):
             results.add(''.join(w))
         return list(results)
 
-def create_ldap_server(server, use_ssl):
-    if use_ssl:
-        tls = Tls(validate=ssl.CERT_NONE)
-        return Server(server, use_ssl=True, tls=tls, get_info=ALL)
-    return Server(server, get_info=ALL)
-
-def get_connection(server, domain, user, password):
-    conn = None
-    try:
-        try:
-            server = create_ldap_server(server, True)
-            conn = Connection(
-                server,
-                user=f"{domain}\\{user}",
-                password=password,
-                authentication=NTLM,
-                auto_referrals=False,
-                channel_binding=TLS_CHANNEL_BINDING,
-            )
-            if not conn.bind():
-                raise LDAPBindError("Channel binding failed")
-        except (ssl.SSLError, socket.error, LDAPBindError) as e:
-            server = create_ldap_server(server, False)
-            conn = Connection(
-                server,
-                user=f"{domain}\\{user}",
-                password=password,
-                authentication=NTLM
-            )
-            if not conn.bind():
-                return None
-    except Exception as e:
-        return None
-    return conn
-
-def get_default_naming_context(server, domain, user, password):
-    conn = get_connection(server, domain, user, password)
-    return server.info.other['defaultNamingContext'][0]
-
-def get_lockout_policy(server, base_dn, domain, user, password):
-    conn = get_connection(server, domain, user, password)
-    conn.search(base_dn, '(objectClass=domain)', attributes=['lockoutThreshold', 'lockoutDuration', 'lockoutObservationWindow', 'minPwdLength', 'pwdProperties', 'pwdHistoryLength'])
-    entry = conn.entries[0]
-    DOMAIN_PASSWORD_COMPLEX = 1
-    pwd_properties  = int(entry['pwdProperties'].value)
-    return {
-        'pwdHistoryLength' : entry['pwdHistoryLength'].value,
-        'pwdProperties' : bool(pwd_properties & DOMAIN_PASSWORD_COMPLEX),
-        'lockoutThreshold': int(entry['lockoutThreshold'].value),
-        'lockoutDuration': entry['lockoutDuration'].value.total_seconds(),
-        'lockoutObservationWindow': entry['lockoutObservationWindow'].value.total_seconds(),
-        'minPwdLength': int(entry['minPwdLength'].value)
-    }
-
 def get_lockout_policy_impacket(conn):
     for i in conn.search("(objectClass=domain)", ['lockoutthreshold', 'lockoutduration', 'lockoutobservationwindow', 'minpwdlength', 'pwdproperties', 'pwdhistorylength']):
         return i
@@ -265,28 +211,11 @@ def enumerate_user_attributes_impacket(conn):
 
     return z
 
-
-def enumerate_user_attributes(server, base_dn, domain, user, password):
-    conn = Connection(server, user=f"{domain}\\{user}", password=password, auto_bind=True, authentication='NTLM')
-    conn.search(
-        search_base=base_dn,
-        search_filter='(&(objectCategory=person)(objectClass=user))',
-        attributes=['sAMAccountName', 'givenName', 'sn']
-    )
-    return [
-        {
-            'sAMAccountName': entry['sAMAccountName'].value,
-            'givenName': entry['givenName'].value if 'givenName' in entry else '',
-            'sn': entry['sn'].value if 'sn' in entry else ''
-        }
-        for entry in conn.entries if 'sAMAccountName' in entry
-    ]
-
 def filter_users(user_attrs: List[Dict], exclude_regexes: List[str]) -> List[Dict]:
     patterns = [re.compile(rgx, re.IGNORECASE) for rgx in exclude_regexes]
     filtered = []
     for user in user_attrs:
-        name = user['sAMAccountName']
+        name = user['samaccountname']
         if any(p.search(name) for p in patterns):
             continue
         filtered.append(user)
@@ -308,8 +237,8 @@ def generate_passwords_from_toml(config_path, company_names, user_attributes, mi
     globals_config = config.get("globals", {})
     patterns = config.get("pattern", [])
 
-    username = user_attributes.get("sAMAccountName", "")
-    first_name = user_attributes.get("givenName", "")
+    username = user_attributes.get("samaccountName", "")
+    first_name = user_attributes.get("givenname", "")
     last_name = user_attributes.get("sn", "")
 
     for entry in patterns:
@@ -402,7 +331,7 @@ def main():
         print(f"[*] Password Complexity: {policy['pwdproperties']}")
         print(f"[*] Minimum Password Length: {policy['minpwdlength']}")
         print(f"[*] Password History Length: {policy['pwdhistorylength']}")
-        
+
     if args.verbose:
         print("[*] Enumerating users...")
 
