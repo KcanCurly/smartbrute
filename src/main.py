@@ -395,12 +395,14 @@ def main():
 
     dynamic_delay = int(policy['lockoutobservationwindow']) + args.extra_delay if int(policy['lockoutobservationwindow']) > 0 else 1.0 + args.extra_delay
 
-    print(f"[*] Lockout Threshold: {policy['lockoutthreshold']} attempts")
-    print(f"[*] Lockout Observation Window: {policy['lockoutobservationwindow']} seconds")
-    print(f"[*] Lockout Duration: {policy['lockoutduration']} seconds")
-    print(f"[*] Password Complexity: {policy['pwdproperties']}")
-    print(f"[*] Minimum Password Length: {policy['minpwdlength']}")
-    print(f"[*] Password History Length: {policy['pwdhistorylength']}")
+    if not args.only_show_generated_passwords:
+        print(f"[*] Lockout Threshold: {policy['lockoutthreshold']} attempts")
+        print(f"[*] Lockout Observation Window: {policy['lockoutobservationwindow']} seconds")
+        print(f"[*] Lockout Duration: {policy['lockoutduration']} seconds")
+        print(f"[*] Password Complexity: {policy['pwdproperties']}")
+        print(f"[*] Minimum Password Length: {policy['minpwdlength']}")
+        print(f"[*] Password History Length: {policy['pwdhistorylength']}")
+        
     if args.verbose:
         print("[*] Enumerating users...")
 
