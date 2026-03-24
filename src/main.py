@@ -257,6 +257,7 @@ def get_lockout_policy(server, base_dn, domain, user, password):
 def get_lockout_policy_impacket(conn):
     for i in conn.search("(objectClass=domain)", ['lockoutthreshold', 'lockoutduration', 'lockoutobservationwindow', 'minpwdlength', 'pwdproperties', 'pwdhistorylength']):
         print(i)
+        print(type(i))
     
 
 
