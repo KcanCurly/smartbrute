@@ -1,1 +1,1 @@
-include smartbrute/patterns.toml
+include src/patterns.toml
