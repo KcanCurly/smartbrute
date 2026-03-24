@@ -10,7 +10,7 @@ import ldap3
 import OpenSSL
 from impacket.ldap import ldap
 
-import utilities
+import src.utilities as utilities
 
 """
 WARNING:
