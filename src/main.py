@@ -12,7 +12,7 @@ from itertools import combinations
 from datetime import datetime, timedelta
 import socket
 import threading
-from ldap_connection import ImpacketLDAPConnector
+from src.ldap_connection import ImpacketLDAPConnector
 
 class UserPasswordContainer:
     def __init__(self, domain, username, passwords, lockoutThreshold):
