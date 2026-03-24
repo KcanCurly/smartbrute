@@ -12,6 +12,7 @@ from itertools import combinations
 from datetime import datetime, timedelta
 import socket
 import threading
+from ldap_connection import ImpacketLDAPConnector
 
 class UserPasswordContainer:
     def __init__(self, domain, username, passwords, lockoutThreshold):
@@ -253,6 +254,10 @@ def get_lockout_policy(server, base_dn, domain, user, password):
         'minPwdLength': int(entry['minPwdLength'].value)
     }
 
+def get_lockout_policy_impacket(conn):
+    conn.search("(objectClass=domain)", ['lockoutThreshold', 'lockoutDuration', 'lockoutObservationWindow', 'minPwdLength', 'pwdProperties', 'pwdHistoryLength'])
+
+
 def enumerate_user_attributes(server, base_dn, domain, user, password):
     conn = Connection(server, user=f"{domain}\\{user}", password=password, auto_bind=True, authentication='NTLM')
     conn.search(
@@ -383,7 +388,12 @@ def main():
         server = Server(args.host, get_info=ALL, use_ssl=True, tls=Tls(validate=ssl.CERT_NONE))
         base_dn = get_default_naming_context(server, args.domain, args.username, args.password)
 
-    policy = get_lockout_policy(server, base_dn, args.domain, args.username, args.password)
+    conn = ImpacketLDAPConnector(args.host, 1, args.domain, args.username, args.password)
+
+    policy = get_lockout_policy_impacket(conn)
+    print(policy)
+
+    return
 
     dynamic_delay = policy['lockoutObservationWindow'] + args.extra_delay if policy['lockoutObservationWindow'] > 0 else 1.0 + args.extra_delay
 
