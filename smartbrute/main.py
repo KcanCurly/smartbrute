@@ -376,8 +376,13 @@ def main():
     parser.add_argument('--verbose', action='store_true', help='Enable verbose output for each login attempt')
     args = parser.parse_args()
 
-    server = Server(args.host, get_info=ALL)
-    base_dn = get_default_naming_context(server, args.domain, args.username, args.password)
+    try:
+        server = Server(args.host, get_info=ALL)
+        base_dn = get_default_naming_context(server, args.domain, args.username, args.password)
+    except Exception as e:
+        server = Server(args.host, get_info=ALL, use_ssl=True, tls=Tls(validate=ssl.CERT_NONE))
+        base_dn = get_default_naming_context(server, args.domain, args.username, args.password)
+
     policy = get_lockout_policy(server, base_dn, args.domain, args.username, args.password)
 
     dynamic_delay = policy['lockoutObservationWindow'] + args.extra_delay if policy['lockoutObservationWindow'] > 0 else 1.0 + args.extra_delay
