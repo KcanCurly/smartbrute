@@ -390,7 +390,7 @@ def main():
 
     policy = get_lockout_policy_impacket(conn)
 
-    dynamic_delay = policy['lockoutobservationwindow'] + args.extra_delay if policy['lockoutobservationwindow'] > 0 else 1.0 + args.extra_delay
+    dynamic_delay = int(policy['lockoutobservationwindow']) + args.extra_delay if int(policy['lockoutobservationwindow']) > 0 else 1.0 + args.extra_delay
 
     print(f"[*] Lockout Threshold: {policy['lockoutthreshold']} attempts")
     print(f"[*] Lockout Observation Window: {policy['lockoutobservationwindow']} seconds")
